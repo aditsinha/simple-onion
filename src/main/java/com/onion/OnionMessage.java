@@ -4,8 +4,8 @@ import java.io.*;
 
 public class OnionMessage implements Serializable {
     public OnionMessage(MsgType type, byte[] data) {
-	this.connectionId = connectionId;
 	this.data = data;
+	this.type = type;
     }
 
     public static enum MsgType {
@@ -13,6 +13,8 @@ public class OnionMessage implements Serializable {
 	KEY_REPLY,
 	HOP_REQUEST,
 	HOP_REPLY,
+	POISON,
+	DATA,
     }
 
     MsgType type;
@@ -25,5 +27,9 @@ public class OnionMessage implements Serializable {
 
     public byte[] getData() {
 	return data;
+    }
+
+    public byte[] pack() {
+	return null;
     }
 }

@@ -1,9 +1,11 @@
 package com.onion;
 
 import java.util.*;
+import java.security.*;
+import java.io.*;
 
-public class CircuitHopKeyRequest {
-    public CircuicHopKeyRequest(List<Key> keys) {
+public class CircuitHopKeyRequest implements Serializable {
+    public CircuitHopKeyRequest(List<Key> keys) {
 	this.keys = keys;
     }
 

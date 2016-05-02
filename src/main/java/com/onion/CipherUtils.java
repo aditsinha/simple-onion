@@ -31,11 +31,6 @@ public class CipherUtils {
 	}
     }
 
-    public static Key generateAesKey() {
-
-    }
-
-    
     public static byte[] applyCipher(byte[] data, Cipher cipher) {
 	try {
 	    return cipher.doFinal(data);
@@ -75,10 +70,10 @@ public class CipherUtils {
 
     // assume that the first key's hop is in hops.get(0)
     public static OnionMessage onionEncryptMessage(OnionMessage msg, List<Key> hops) {
-	bool isPoison = (msg.getType() == MsgType.POISON);
+	boolean isPoison = (msg.getType() == OnionMessage.MsgType.POISON);
 
 	for (int i = hops.size() - 1; i >= 0; i--) {
-	    msg = new OnionMessage(isPoison ? MsgType.POISON : MsgType.DATA,
+	    msg = new OnionMessage(isPoison ? OnionMessage.MsgType.POISON : OnionMessage.MsgType.DATA,
 				   applyCipher(msg.pack(), SYM_ALGORITHM,
 					       Cipher.ENCRYPT_MODE, hops.get(i)));
 	}
