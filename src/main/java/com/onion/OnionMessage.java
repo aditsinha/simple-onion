@@ -15,7 +15,7 @@ public class OnionMessage implements Serializable {
     }
 
     public enum MsgType {
-        HOP_REQUEST, HOP_REPLY, DATA, POISON
+        HOP_REQUEST, HOP_REPLY, DATA, POISON, KEY_REQUEST, KEY_REPLY
     }
 
     public int connectionId;

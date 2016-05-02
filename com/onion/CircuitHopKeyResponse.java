@@ -10,5 +10,13 @@ import org.bouncycastle.util.io.pem.*;
 import org.bouncycastle.crypto.*;
 
 public class CircuitHopKeyResponse {
-    Key rsaPrivateKey;
+	Key rsaPrivateKey;
+
+	public CircuitHopKeyResponse (Key rsaPrivateKey) {
+		this.rsaPrivateKey = rsaPrivateKey;
+	}
+
+	public Key getKey() {
+		return rsaPrivateKey;
+	} 
 }

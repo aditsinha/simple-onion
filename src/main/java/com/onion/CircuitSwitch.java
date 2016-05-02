@@ -2,169 +2,147 @@ package com.onion;
 
 import java.net.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.net.*;
+
 
 public class CircuitSwitch {
 	// Connection Map
-	SwitchThreadPool serviceThreads;
-	ConcurrentHashMap<int, Connection> connMap;
+	ThreadPool serviceThreads;
+	ConcurrentHashMap<Socket, Connection> connMap;
 	Config conf;
+	KeyPair keys;
 
 	CircuitSwitch(String configName){
+		keys = CipherUtils.generateRsaKeyPair();	
 		conf = new Config(configName);
-		serviceThreads = new SwitchThreadPool(ServerSocket(Common.PORT));
-		connMap = new ConcurrentHashMap<int, Connection>(8, (float)0.75, 8));
-		// TODO start the thread pool
+		serviceThreads = new SwitchThreadPool(ServerSocket(Common.PORT), SWITCH);
+		connMap = new ConcurrentHashMap<Socket, Connection>(8, (float)0.75, 8);
+		serviceThreads.start();
 	}
 
 	// represents a single connection
 	private class Connection {
-		public KeyPair keys;
+		public Key key;
 		public Socket nextHop;
 
-		Connection(KeyPair keys, Socket nextHop) {
+		Connection(Key keys, Socket nextHop) {
 			this.keys = keys;
 			this.nextHop = nextHop;
 		}
 	}
 
-	// thread pool used by the switch
-	private class SwitchThreadPool {
+	private class ThreadPool {
+	    // thread pool used by the switch
 	    int poolSize;
 	    LinkedBlockingQueue<Socket> requests;
 	    ArrayList<Thread> threads;
 	    ServerSocket welcomeSocket;
 
-	    public ThreadPool(ServerSocket welcomeSocket) {
-	        this(7, welcomeSocket);
+	    public ThreadPool(ServerSocket welcomeSocket, Mode mode) {
+		this(7, welcomeSocket, task, mode);
 	    }
 
-	    public ThreadPool(int poolSize, ServerSocket welcomeSocket) {
-	        this.requests = new LinkedBlockingQueue<Socket>();
-	        this.threads = new ArrayList<Thread>();
-	        this.welcomeSocket = welcomeSocket;
-	        this.poolSize = poolSize;
+	    public ThreadPool(int poolSize, ServerSocket welcomeSocket, Mode mode) {
+		this.requests = new LinkedBlockingQueue<Socket>();
+		this.threads = new ArrayList<Thread>();
+		this.welcomeSocket = welcomeSocket;
+		this.poolSize = poolSize;
+		this.mode = mode;
 
-	        initPool();
+		initPool();
 	    }
 
 	    public void start() throws Exception {
-	        
-	        for (Thread t : threads) {
-	            t.start();
-	        }
+		
+		for (Thread t : threads) {
+		    t.start();
+		}
 
-	        while(true) {
-	            try {
-	                requests.add(welcomeSocket.accept());    
-	            } catch (Exception e) {
-	                e.printStackTrace();
-	            }
-	        }
+		while(true) {
+		    try {
+			requests.add(welcomeSocket.accept());    
+		    } catch (Exception e) {
+			e.printStackTrace();
+		    }
+		}
 	    }
 
 	    private void initPool() {
-	        // spin off the threads.
-	        for (int i = 0; i < poolSize; i++) {
-	            threads.add(new Thread(new RequestWorker(requests)));
-	        }
-	    }
-	}
-
-
-	private class RequestWorker implements Runnable {
-	    LinkedBlockingQueue<Socket> requests;
-
-	    public RequestWorker(LinkedBlockingQueue<Socket> requests) {
-	        this.requests = requests;
-	    }
-
-	    public void run () {
-	    	while(true) {
-	    		Socket sck = requests.take();
-		        OnionMessage msg = OnionMessage.unpack(sck);
-		        switch(msg.getType()) {
-		        	case OnionMessage.MsgType.DATA:
-		        		handleDataMessage(msg);
-		        		break;
-		        	case OnionMessage.MsgType.HOP_REQUEST:
-		        		handleHopRequestMessage(msg);
-		        		break;
-		        	case OnionMessage.MsgType.HOP_REPLY:
-		        		handleCircuitEstablishmentMessage(msg);
-		        		break;
-		        	case OnionMessage.MsgType.POISON:
-		        		handlePoisonMessage(msg);
-		        		break;
-		        }
+		// spin off the threads.
+		for (int i = 0; i < poolSize; i++) {
+			threads.add(new Thread(new RequestWorker(requests)));
 	    	}
+	    }	
+		}	
+	private class SwitchWorker implements Runnable {
+		LinkedBlockingQueue<Socket> requests;	
+
+		public SwitchWorker(LinkedBlockingQueue<Socket> requests) {
+			this.requests = requests;
 		}
 
-		private void handleHopRequestMessage(OnionMessage msg) {
+		public void run () {
+			while(true) {
+				Socket sck = requests.take();
+				OnionMessage msg = OnionMessage.unpack(sck);
+				switch(msg.getType()) {
+					case OnionMessage.MsgType.DATA:
+						handleDataMessage(msg, sck);
+						break;
+					case OnionMessage.MsgType.HOP_REQUEST:
+						handleHopRequestMessage(msg, sck);
+						break;
+					case OnionMessage.MsgType.POISON:
+						handlePoisonMessage(msg, sck);
+						break;
+					case OnionMessage.MsgType.KEY_REQUEST:
+						handleKeyRequestMessage(msg, sck);
+						break;	        
+				}
+			}
+		}
+
+		private void handleHopRequestMessage(OnionMessage msg, Socket sck) {
+			byte[] decryptedData = CipherUtils.applyCipher(msg.data(), "RSA/ECB/PKCSPadding", Cipher.DECRYPT_MODE, keys.getPrivate());
 			CircuitHopRequestMessage chrm = (CircuitHopRequestMessage) CipherUtils.deserialize(msg.getData());
 			if(chrm == null) {
 				System.err.println("[CircuitSwitch]: handleHopRequestMessage: cannot deserialize.");
 				System.exit(1);
 			}
 
-			Socket localSck = new Socket();
+			Socket nextSwitch = new Socket();
+			nextSwitch.connect(config.getSwitch(chrm.getNextNode()));
+			Connection cnt = new Connection(chrm.getKey(), nextSwitch);
+			connMap.put(sck, cnt);
+			Connection revCnt = new Connection(chrm.getKey(), sck);
+			connMap.put(nextSwitch, revCnt);			
+		
+			// TODO : serialize and encrypt. call onionEncryptMessage with the keys from circuit hope request. 
+			// will be changed. Send response 
+		}		
+
+		private void handleKeyRequestMessage(OnionMessage msg, Socket sck) {
+			CircuitHopKeyRequest req = (CircuitHopKeyRequest) CipherUtils.deserialize(msg.getData());
+			CircuitHopKeyResponse resp = new CircuitHopeKeyResponse(keys.getPublic());
+			// TODO: onionEncryptMessage this
+			// then actually serialize and encrypt that.	
+			// use sck to return that.
 		}
 
-		private void handleCircuitEstablishmentMessage(OnionMessage msg) {
-
+		private void handleDataMessage(OnionMessage msg, Socket sck) {
+			byte[] decryptedData = CipherUtils.applyCipher(msg.data(), "AES/ECB/PKCS7Padding", Cipher.DECRYPT_MODE, connMap.get(sck).key);
+			Socket nextHop = connMap.get(sck).nextHop;	
+			nextHop.getOutputStream().write(decryptedData, 0 , decryptedData.length);
 		}
 
-		private void handleDataMessage(OnionMessage msg) {
-
-		}
-
-		private void handlePoisonMessage(OnionMessage msg) {
-
-		}
+		private void handlePoisonMessage(OnionMessage msg, Socket sck) {
+			handledataMessage(msg, sck);
+			// now delete from your hashtable.
+			Socket nexthop = connMap.get(sck).nextHop;
+			connMap.remove(sck);
+			connMap.remove(nextHop);
+			}
 	}
-}
-}
-
- LinkedBlockingQueue<Socket> requests;
-
-    public RequestWorker(LinkedBlockingQueue<Socket> requests) {
-        this.requests = requests;
-    }
-
-
-    public void run () {
-        Socket connectionSocket;
-        while(true) {   
-            try {
-                // blocks until finds a socket to take.
-                connectionSocket = requests.take();
-                Request mReq = RequestParser.parse(connectionSocket);
-                
-                // handle errors
-                if(mReq.getErrorMsg() != null) {
-                    Responder.sendSpecialMessage(connectionSocket, mReq);
-                    continue;
-                }
-
-                if (mReq.getUri().equals("load")) {
-                    if(Server.load.acceptsConn()) {
-                        mReq.setErrorMsg("OK");
-                        mReq.setErrorCode(200);
-                        Responder.sendSpecialMessage(connectionSocket, mReq);
-                    } else {
-                        mReq.setErrorMsg("Server Overloaded");
-                        mReq.setErrorCode(503);
-                        Responder.sendSpecialMessage(connectionSocket, mReq);
-                    }
-                } else {
-                    FileManager.getFile(mReq);
-
-                    // respond.
-                    Responder.respond(connectionSocket, mReq);
-                }
-            } catch (Exception e) {
-                // ignore.
-                e.printStackTrace();
-            }   
-        }
-    }
 }
