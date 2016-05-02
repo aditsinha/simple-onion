@@ -3,6 +3,8 @@ package com.onion;
 import java.util.*;
 import java.io.*;
 import java.security.*;
+import java.security.spec.*;
+import java.math.*;
 
 import javax.crypto.*;
 
@@ -14,21 +16,19 @@ public class CipherUtils {
 
     private static Random rand = new Random();
 
-    public static <T> T readPublicKey(String keyfile, Class<T> clazz) {
+    public static KeyPair generateRsaKeyPair() {
 	try {
-	    PemReader keyReader = new PemReader(new FileReader("keyFile"));
-	    Object o = keyReader.readPemObject();
+	    KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA", "BC");
 
-	    System.out.println(o.getClass().getName());
-
-	    return clazz.cast(o);
-	            
-	} catch (IOException e) {
+	    keyGen.initialize(new RSAKeyGenParameterSpec(768, BigInteger.valueOf(65537)));
+	    return keyGen.generateKeyPair();
+	} catch (GeneralSecurityException e) {
 	    e.printStackTrace();
 	    return null;
 	}
     }
 
+    
     public static byte[] applyCipher(byte[] data, Cipher cipher) {
 	try {
 	    return cipher.doFinal(data);
@@ -38,6 +38,28 @@ public class CipherUtils {
 	}
     }
 
+    public static byte[] applyCipher(byte[] data, String cipherAlgorithm, int mode, Key key) {
+	try {
+	    Cipher cipher = Cipher.getInstance(cipherAlgorithm, "BC");
+	    cipher.init(Cipher.ENCRYPT_MODE, key);
+	    return cipher.doFinal(data);
+	} catch (GeneralSecurityException e) {
+	    e.printStackTrace();
+	    return null;
+	}
+    }
+
+    public static Object deserialize(byte[] data) {
+	try {
+	    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
+	    return ois.readObject();
+	} catch (IOException | ClassNotFoundException e) {
+	    // this is bad
+	    e.printStackTrace();
+	    return null;
+	}
+    }
+    
     public static byte[] getRandomBytes(int count) {
 	byte[] b = new byte[count];
 	rand.nextBytes(b);
@@ -48,26 +70,8 @@ public class CipherUtils {
 	byte[] data = msg;
 	for (int i = 0; i < hops.size(); i++) {
 	    OnionMessage onionMsg = new OnionMessage(hops.get(i).getConnectionId(), data);
-	    ByteArrayOutputStream objectStream;
-	    try {
-		objectStream = new ByteArrayOutputStream();
-		ObjectOutputStream oos = new ObjectOutputStream(objectStream);
-		oos.writeObject(onionMsg);
-	    } catch (IOException e) {
-		e.printStackTrace();
-		return null;
-	    }
-
-	    Cipher cipher;
-	    try {
-		cipher = Cipher.getInstance("AES/ECB/PKCS7Padding", "BC");
-		cipher.init(Cipher.ENCRYPT_MODE, hops.get(i).getKey());
-	    } catch (GeneralSecurityException e) {
-		e.printStackTrace();
-		return null;
-	    }
-
-	    data = applyCipher(objectStream.toByteArray(), cipher);
+	    byte[] unencrypted = serialize(onionMsg);
+	    data = applyCipher(unencrypted, "AES/ECB/PKCS7Padding", Cipher.ENCRYPT_MODE, hops.get(i).getKey());
 	}
 
 	return data;

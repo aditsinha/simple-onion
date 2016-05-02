@@ -4,19 +4,15 @@ import java.security.*;
 import java.io.*;
 
 public class CircuitHopRequestMessage implements Serializable {
-    public CircuitHopRequestMessage(int nextNode, Key key) {
+    public CircuitHopRequestMessage(int nextNode, Key secretKey) {
 	this.nextNode = nextNode;
-	this.key = key;
+	this.secretKey = secretKey;
     }
 
-    int nextNode;
-    Key key;
+    private int nextNode;
+    private Key secretKey;
     
     public int getNextNode() {
 	return nextNode;
-    }
-
-    public Key getKey() {
-	return key;
     }
 }
