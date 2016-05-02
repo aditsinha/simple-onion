@@ -18,6 +18,8 @@ public class CircuitEstablishment {
     private HopSpec outstandingHop;
     public List<HopSpec> establishedHops;
 
+    private boolean isKeyRequestSent;
+    
     private boolean isConnectionEstablished;
 
     public CircuitEstablishment(List<Integer> hops, int destination) {
@@ -87,7 +89,7 @@ public class CircuitEstablishment {
 	} else {
 	    assert false;
 	            
-	}
+ 	}
 
 	if (msg == null)
 	    return null;

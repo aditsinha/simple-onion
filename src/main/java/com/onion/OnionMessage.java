@@ -6,7 +6,6 @@ public class OnionMessage implements Serializable {
     public OnionMessage(int connectionId, byte[] data) {
 	this.connectionId = connectionId;
 	this.data = data;
-	    
     }
 
     public int connectionId;
@@ -19,7 +18,5 @@ public class OnionMessage implements Serializable {
 
     public byte[] getData() {
 	return data;
-	    
     }
-    
 }

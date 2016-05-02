@@ -11,7 +11,6 @@ public class HopSpec {
 
     public int getConnectionId() {
 	return connectionId;
-	    
     }
 
     public Key getKey() {
