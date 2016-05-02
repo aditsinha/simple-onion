@@ -3,16 +3,23 @@ package com.onion;
 import java.io.*;
 
 public class OnionMessage implements Serializable {
-    public OnionMessage(int connectionId, byte[] data) {
+    public OnionMessage(MsgType type, byte[] data) {
 	this.connectionId = connectionId;
 	this.data = data;
     }
 
-    public int connectionId;
+    public static enum MsgType {
+	KEY_REQUEST,
+	KEY_REPLY,
+	HOP_REQUEST,
+	HOP_REPLY,
+    }
+
+    MsgType type;
     byte[] data;
 
-    public int getConnectionId() {
-	return connectionId;
+    public MsgType getType() {
+	return type;
 	    
     }
 
