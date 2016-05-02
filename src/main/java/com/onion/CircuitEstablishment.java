@@ -15,88 +15,50 @@ public class CircuitEstablishment {
     private List<Integer> hops;
     private int destination;
 
-    private HopSpec outstandingHop;
-    public List<HopSpec> establishedHops;
+    public List<Key> keyList;
 
-    private boolean isKeyRequestSent;
-    
     private boolean isConnectionEstablished;
+
+    private Key hopPublicKey, hopSymmetricKey;
 
     public CircuitEstablishment(List<Integer> hops, int destination) {
 	this.hops = hops;
 	isConnectionEstablished = false;
-	establishedHops = new ArrayList<>(hops.size());
-	    
+	keyList = new ArrayList<>();
     }
 
-    public byte[] encryptAsymmetric(byte[] msg, PublicKey key) {
-	Cipher cipher;
-	try {
-	    cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding", "BC");
-	    cipher.init(Cipher.ENCRYPT_MODE, key);
-	} catch (GeneralSecurityException e) {
-	    e.printStackTrace();
-	    return null;
-	}
-
-	return CipherUtils.applyCipher(msg, cipher);
-    }
-
-    public void processMessage(byte[] msg) {
-	CircuitHopReplyMessage reply;
-	// expect to receive a CircuitHopReplyMessage
-	try {
-	    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(msg));
-	    reply = (CircuitHopReplyMessage) ois.readObject();
-	            
-	} catch (IOException | ClassNotFoundException e) {
-	    // this is bad
-	    e.printStackTrace();
-	    return;
-	}
-
-	outstandingHop.setConnectionId(reply.getHopConnectionId());
-	establishedHops.add(outstandingHop);
-	outstandingHop = null;
-	    
-    }
-
-    public byte[] getNextMessage() {
-	Serializable msg = null;
-
-	if (establishedHops.size() < hops.size()) {
-	    // haven't established all of the hops yet
-	    if (outstandingHop == null) {
-		// ready to do another handshake
-		int nextHopNode = (establishedHops.size() < hops.size() - 1) ? hops.get(establishedHops.size() + 1) : destination;
-		byte[] keyData = CipherUtils.getRandomBytes(16);
-		outstandingHop = new HopSpec();
-		outstandingHop.setKey(new SecretKeySpec(keyData, "AES"));
-
-		msg = new CircuitHopRequestMessage(nextHopNode, outstandingHop.getKey());
-		            
+    public OnionMessage processMessage(OnionMessage msg) {
+	switch (msg.getType()) {
+	case HOP_REPLY:
+	    // established connection.  make the next hop
+	    keyList.add(hopSymmetricKey);
+	    hopPublicKey = null;
+	    hopSymmetricKey = null;
+	    if (keyList.size() == hops.size()) {
+		isConnectionEstablished = true;
 	    }
-
-	    // else we aren't ready to do another handshake
-	            
-	} else if (!isConnectionEstablished) {
-	    // need to send the entire chain to the other end.  send it in reverse though
-	    List<HopSpec> reversedCircuit = new ArrayList<>(establishedHops);
-	    Collections.reverse(reversedCircuit);
-	    isConnectionEstablished = true;
-	    msg = new CircuitEstablishmentMessage(reversedCircuit);
-	            
-	} else {
-	    assert false;
-	            
- 	}
-
-	if (msg == null)
+	    return new OnionMessage(OnionMessage.MsgType.KEY_REQUEST,
+				    CipherUtils.serialize(new CircuitHopKeyRequest(keyList)));
+	case KEY_REPLY:
+	    CircuitHopKeyReply reply = (CircuitHopKeyReply) CipherUtils.deserialize(msg.getData());
+	    hopPublicKey = reply.getKey();
+	    hopSymmetricKey = new SecretKeySpec(CipherUtils.getRandomBytes(16), "AES");
+	    int nextHop = (keyList.size() < hops.size() - 1) ? hops.get(keyList.size() + 1) : destination;
+	    byte[] requestMessageData =
+		CipherUtils.serialize(new CircuitHopRequestMessage(nextHop,
+								   hopSymmetricKey,
+								   keyList));
+	    return new OnionMessage(OnionMessage.MsgType.HOP_REQUEST,
+				    CipherUtils.applyCipher(requestMessageData, CipherUtils.ASYM_ALGORITHM,
+							    Cipher.ENCRYPT_MODE,
+							    hopPublicKey));
+	default:
+	    System.out.println("ERROR UNEXPECTED MESSAGE TYPE: " + msg.getType());
 	    return null;
-
-	byte[] msgData = CipherUtils.serialize(msg);
-	return CipherUtils.onionEncryptMessage(msgData, establishedHops);
-	    
+	}
     }
-    
+
+    public OnionMessage getFirstMessage() {
+	return new OnionMessage(OnionMessage.MsgType.KEY_REQUEST, CipherUtils.serialize(new CircuitHopKeyRequest(keyList)));
+    }
 }

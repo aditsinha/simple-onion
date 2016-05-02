@@ -14,6 +14,9 @@ import org.bouncycastle.crypto.*;
 
 public class CipherUtils {
 
+    public static String ASYM_ALGORITHM = "RSA/ECB/PKCSPadding";
+    public static String SYM_ALGORITHM = "AES/ECB/PKCS7Padding";
+
     private static Random rand = new Random();
 
     public static KeyPair generateRsaKeyPair() {
@@ -28,7 +31,6 @@ public class CipherUtils {
 	}
     }
 
-    
     public static byte[] applyCipher(byte[] data, Cipher cipher) {
 	try {
 	    return cipher.doFinal(data);
@@ -41,7 +43,7 @@ public class CipherUtils {
     public static byte[] applyCipher(byte[] data, String cipherAlgorithm, int mode, Key key) {
 	try {
 	    Cipher cipher = Cipher.getInstance(cipherAlgorithm, "BC");
-	    cipher.init(Cipher.ENCRYPT_MODE, key);
+	    cipher.init(mode, key);
 	    return cipher.doFinal(data);
 	} catch (GeneralSecurityException e) {
 	    e.printStackTrace();
@@ -66,17 +68,19 @@ public class CipherUtils {
 	return b;
     }
 
-    public static byte[] onionEncryptMessage(byte[] msg, List<HopSpec> hops) {
-	byte[] data = msg;
-	for (int i = 0; i < hops.size(); i++) {
-	    OnionMessage onionMsg = new OnionMessage(hops.get(i).getConnectionId(), data);
-	    byte[] unencrypted = serialize(onionMsg);
-	    data = applyCipher(unencrypted, "AES/ECB/PKCS7Padding", Cipher.ENCRYPT_MODE, hops.get(i).getKey());
+    // assume that the first key's hop is in hops.get(0)
+    public static OnionMessage onionEncryptMessage(OnionMessage msg, List<Key> hops) {
+	boolean isPoison = (msg.getType() == OnionMessage.MsgType.POISON);
+
+	for (int i = hops.size() - 1; i >= 0; i--) {
+	    msg = new OnionMessage(isPoison ? OnionMessage.MsgType.POISON : OnionMessage.MsgType.DATA,
+				   applyCipher(msg.pack(), SYM_ALGORITHM,
+					       Cipher.ENCRYPT_MODE, hops.get(i)));
 	}
 
-	return data;
+	return msg;
     }
-
+	
     public static byte[] serialize(Serializable obj) {
 	ByteArrayOutputStream baos = new ByteArrayOutputStream();
 	ObjectOutputStream oos = null;
