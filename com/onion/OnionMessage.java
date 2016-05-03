@@ -37,10 +37,8 @@ public class OnionMessage implements Serializable {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
             ByteBuffer bb = ByteBuffer.allocate(4).putInt(data.length);
-            baos.write(CipherUtils.serialize(new Integer(this.type.ordinal())));
-            baos.write(data, 0, data.length);
-            byte[] baosBytes = baos.toByteArray();
-            bb.put(baosBytes, 0, baosBytes.length);
+            byte[] thisObject = CipherUtils.serialize(this);
+            bb.put(thisObject, 0, thisObject.length);
             return bb.array();
         } catch (Exception e) {
             return null;
@@ -54,12 +52,10 @@ public class OnionMessage implements Serializable {
             is.read(len, 0, len.length);
             int length = ByteBuffer.wrap(len).getInt();
 
-            ObjectInputStream ois = new ObjectInputStream(sck.getInputStream());
-            ois = new ObjectInputStream(sck.getInputStream());
-            MsgType type = OnionMessage.MsgType.values()[(Integer) ois.readObject()];
-            byte[] data = new byte[length];
-            is.read(data, 0, length);
-            return new OnionMessage(type, data);    
+            byte[] object = new byte[length];
+            is.read(object, 0, object.length);
+
+            return (OnionMessage) CipherUtils.deserialize(object);    
         } catch (Exception e) {
             e.printStackTrace();
             return null;
