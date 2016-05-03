@@ -168,6 +168,7 @@ public class CircuitSwitch {
 					nextNodeAddr = conf.getSwitch(nextNode);
 				}
 
+				Common.log("[CircuitSwitch]: Establishing connection with: " + nextNodeAddr.getHostName());
 				nextHop.connect(new InetSocketAddress(nextNodeAddr, Common.PORT));
 				key = symKey;
 
