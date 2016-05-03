@@ -145,7 +145,7 @@ public class Client {
 			// save the symmetric keys
 			ArrayList<Key> symmetricKeys = (ArrayList<Key>) ce.keyList;
 			Connection c = new Connection(destination, sck, symmetricKeys);
-			Common.log("Connection Established.");
+			Common.log("[Client]: Connection Established.");
 			connMap.put(destination, c);
 
 		} catch (Exception e) {
@@ -190,22 +190,22 @@ public class Client {
 			while(true) {
 				try {
 					Socket newConn = sck.accept();
+					Common.log("[Client]: Accepting connection");
 					OnionMessage omsg = OnionMessage.unpack(newConn);
 					if(omsg.getType() == OnionMessage.MsgType.KEY_REQUEST) {
 						CircuitHopKeyRequest chkr = (CircuitHopKeyRequest) CipherUtils.deserialize(omsg.getData());
-						if(chkr == null){
-							// TODO handle error 
-						}
 						// this will definitely be unique.
 						int hashKey = sck.getLocalPort();
 						Connection c = new Connection(hashKey, newConn, chkr.getKeys());
 						connMap.put(hashKey, c);
+						Common.log("[Client]: Connection accepted.");
 						// TODO write about this somehow	
 					} else {
 						// TODO handle error
 					}
 				} catch (Exception e) {
-					// TODO handle this.
+					e.printStackTrace();
+					System.exit(1);
 				}
 			}
 		}
