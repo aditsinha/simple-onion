@@ -40,7 +40,15 @@ public class Client {
 			while( (command = bf.readLine().split(" ")) != null) {
 				if(command[0].equals("send")) {
 					try {
-						int targetHost = stringToInt(command[1], true);
+						int targetHost = Integer.parseInt(command[1]);
+
+						if(targetHost < 0) {
+							System.out.println("Illegal targer host number.");
+							continue;
+						} else if (!connMap.contains(targetHost)) {
+							System.out.println("Connection with this host not established");
+							continue;
+						}
 
 						// merge the string back
 						StringBuffer message = new StringBuffer();
@@ -58,8 +66,19 @@ public class Client {
 					}
 				} else if (command[0].equals("connect")) {
 					try {
-						int targetHost = stringToInt(command[1], false);
-						
+						int targetHost = Integer.parseInt(command[1]);
+
+						if(targetHost < 0 || targetHost >= config.getEndpointsCount()) {
+							System.out.println("Illegal target host number");
+							throw new Exception();
+						}
+
+						if(connMap.contains(targetHost)) {
+							System.out.println("Connection with this host already established");
+							System.out.println("Usage: connect <ID-of-host>");
+							throw new Exception();
+						}		
+
 						establishConnection(targetHost);
 						continue;
 					} catch (Exception e) {
