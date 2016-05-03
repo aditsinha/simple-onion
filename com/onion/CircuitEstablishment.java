@@ -17,7 +17,7 @@ public class CircuitEstablishment {
 
     public List<Key> keyList;
 
-    private boolean isConnectionEstablished;
+    public boolean isConnectionEstablished;
 
     private Key hopPublicKey, hopSymmetricKey;
 

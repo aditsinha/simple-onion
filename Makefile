@@ -19,7 +19,11 @@ CLASSES = \
 	com/onion/CircuitEstablishment \
 	com/onion/App \
 	com/onion/CircuitHopKeyRequest \
-	com/onion/CircuitHopKeyResponse
+	com/onion/CircuitHopKeyResponse \
+	com/onion/Common \
+	com/onion/Client \
+	com/onion/Config \
+	com/onion/CircuitSwitch
 
 SRCS = $(addsuffix .java, $(CLASSES))
 OBJS = $(addsuffix .class, $(CLASSES))
