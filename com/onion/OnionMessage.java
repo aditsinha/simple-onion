@@ -51,6 +51,7 @@ public class OnionMessage implements Serializable {
             MsgType type = OnionMessage.MsgType.values()[(Integer) ois.readObject()];
             byte[] data = new byte[length];
             ois.read(data, 0, length);
+            ois.close();
             return new OnionMessage(type, data);    
         } catch (Exception e) {
             e.printStackTrace();

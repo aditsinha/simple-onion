@@ -107,6 +107,7 @@ public class CircuitSwitch {
 				} catch (Exception e) {
 					// this is bad
 					e.printStackTrace();
+					System.exit(1);
 				}
 			}
 		}
