@@ -35,7 +35,7 @@ classes: $(OBJS)
 
 clean:
 	find . -name "*.class" | tee /dev/stderr | xargs rm -f
-	rm -f *.jar
+	rm -f onion.jar
 
 launch: all
 	$(JLAUNCH) $(ARCH) $(SERVER_FLAGS)
