@@ -128,6 +128,8 @@ public class Client {
 			// the circuit has been established
 			// save the symmetric keys
 			ArrayList<Key> symmetricKeys = (ArrayList<Key>) ce.keyList;
+			String name = config.getEndpoint(destination).getHostName();
+			name = name.substring(0, name.indexOf("."));
 			Connection c = new Connection(destination, sck, symmetricKeys);
 			Common.log("[Client]: Connection Established.");
 			connMap.put(destination, c);
@@ -173,7 +175,7 @@ public class Client {
 		public void run() {
 			while(true) {
 				try {
-                                    Common.log("[Client]: Waiting to accept connection");
+					Common.log("[Client]: Waiting to accept connection");
 					Socket newConn = sck.accept();
 					Common.log("[Client]: Accepting connection");
 					OnionMessage omsg = OnionMessage.unpack(newConn);
