@@ -118,6 +118,8 @@ public class Client {
 				// get the new message
 				msg = ce.processMessage(response);
 			}
+                        // send the keys to the destination node
+                        os.write(msg, 0, msg.length);
 
 			Common.log("[Client]: Circuit established.");
 			// the circuit has been established
