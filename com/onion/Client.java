@@ -68,7 +68,7 @@ public class Client {
 						continue;
 					}
 				} else if (command[0].equals("disconnect")) {
-
+					// TODO disconnect
 				}
 
 				System.out.println("Wrong command given. Available commands:");
