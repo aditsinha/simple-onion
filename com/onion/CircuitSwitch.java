@@ -88,10 +88,8 @@ public class CircuitSwitch {
 					// accept a new connection only if currently not serving one.
 					if(sck == null)
 						sck = requests.take();
-					OnionMessage msg = OnionMessage.unpack(sck);
-					if(msg == null)
-						Common.log("[CircuitSwitch]: run: null message!");
 
+					OnionMessage msg = OnionMessage.unpack(sck);
 					switch(msg.getType()) {
 						case DATA:
 							handleDataMessage(msg);

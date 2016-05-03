@@ -105,7 +105,7 @@ public class Client {
 
 		CircuitEstablishment ce = new CircuitEstablishment(hops, destination);
 		
-		byte[] msg = CipherUtils.serialize(ce.getFirstMessage());
+		byte[] msg = ce.getFirstMessage().pack();
 		OnionMessage response = null;
 		try {
 			Socket sck = new Socket();
