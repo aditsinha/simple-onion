@@ -3,16 +3,9 @@ package com.onion;
 import java.io.*;
 
 public class CircuitHopReplyMessage implements Serializable {
-    public CircuitHopReplyMessage(int hopConnectionId) {
-	this.hopConnectionId = hopConnectionId;
+    // this class servers as an Ack
+    public CircuitHopReplyMessage() {
     }
 
-    private int hopConnectionId;
-
-    public int getHopConnectionId() {
-	return hopConnectionId;
-	    
-    }
-    
 }
 

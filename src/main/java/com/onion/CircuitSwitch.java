@@ -1,7 +1,6 @@
 package com.onion;
 
 import java.net.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.net.*;
@@ -76,6 +75,7 @@ public class CircuitSwitch {
 		Socket sck = null;
 		Socket nextHop = null;
 		Key key;
+		ArrayList<Key> hopKeys = null;
 
 		public SwitchWorker(LinkedBlockingQueue<Socket> requests) {
 			this.requests = requests;
@@ -110,6 +110,7 @@ public class CircuitSwitch {
 		}
 
 		private void handleHopRequestMessage(OnionMessage msg) {
+			Common.log("[CircuitSwitch]: Hop Request Message Received");
 			byte[] decryptedData = CipherUtils.applyCipher(msg.getData(), "RSA/ECB/PKCSPadding", Cipher.DECRYPT_MODE, keys.getPrivate());
 			CircuitHopRequestMessage chrm = (CircuitHopRequestMessage) CipherUtils.deserialize(msg.getData());
 			if(chrm == null) {
@@ -120,13 +121,22 @@ public class CircuitSwitch {
 			try {
 				nextHop = new Socket();
 				nextHop.connect(new InetSocketAddress(conf.getSwitch(chrm.getNextNode()), Common.PORT));
-				key = chrm.getSecretKey(); 
+				key = chrm.getSecretKey();
+
+				// create an answer message.
+				CircuitHopReplyMessage resp = new CircuitHopReplyMessage();
+				byte[] respBytes = CipherUtils.serialize(resp);
+
+				OnionMessage response = new OnionMessage(OnionMessage.MsgType.HOP_REPLY, respBytes);
+				byte[] responseEncr = CipherUtils.serialize(CipherUtils.onionEncryptMessage(response, hopKeys));
+
+				sck.getOutputStream().write(responseEncr, 0, responseEncr.length);
+				Common.log("[CircuitSwitch]: Response Sent.");
+
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.exit(1);
 			}
-			// TODO : serialize and encrypt. call onionEncryptMessage with the keys from circuit hope request. 
-			// will be changed. Send response 
 		}		
 
 		private void handleKeyRequestMessage(OnionMessage msg) {
@@ -172,6 +182,7 @@ public class CircuitSwitch {
 				nextHop = null;
 				sck = null;
 				key = null;
+				hopKeys = null;
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.exit(1);
