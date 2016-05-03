@@ -27,7 +27,7 @@ public class Config {
 			// populate the set of switches
 			Common.log("[Config]: Switches: ");
 			String configLine;
-			while((configLine = buffRead.readLine()) != null || configLine == "") {
+			while(((configLine = buffRead.readLine()) != null) && !configLine.equals("")) {
 				try {
 					Common.log("\t [Config]: " + configLine);
 					switches.add(InetAddress.getByName(configLine));
