@@ -40,7 +40,15 @@ public class Client {
 			while( (command = bf.readLine().split(" ")) != null) {
 				if(command[0].equals("send")) {
 					try {
-						int targetHost = stringToInt(command[1], false);
+						int targetHost = Integer.parseInt(command[1]);
+
+						if(targetHost < 0) {
+							System.out.println("Illegal targer host number.");
+							continue;
+						} else if (!connMap.containsKey(targetHost)) {
+							System.out.println("Connection with this host not established");
+							continue;
+						}
 
 						// merge the string back
 						StringBuffer message = new StringBuffer();
@@ -58,8 +66,19 @@ public class Client {
 					}
 				} else if (command[0].equals("connect")) {
 					try {
-						int targetHost = stringToInt(command[1], true);
-						
+						int targetHost = Integer.parseInt(command[1]);
+
+						if(targetHost < 0 || targetHost >= config.getEndpointsCount()) {
+							System.out.println("Illegal target host number");
+							throw new Exception();
+						}
+
+						if(connMap.containsKey(targetHost)) {
+							System.out.println("Connection with this host already established");
+							System.out.println("Usage: connect <ID-of-host>");
+							throw new Exception();
+						}		
+
 						establishConnection(targetHost);
 						continue;
 					} catch (Exception e) {
@@ -82,20 +101,7 @@ public class Client {
 			System.exit(1);
 		}
 	}
-
-	private int stringToInt(String strInt, boolean contains) throws Exception {
-		int targetHost = Integer.parseInt(strInt);
-		if(targetHost < 0 || targetHost >= config.getEndpointsCount()) {
-			throw new Exception();
-		}
-
-		if(connMap.contains(targetHost) == contains) {
-			throw new Exception();
-		}
-
-		return targetHost;
-	}
-
+	
 	private void establishConnection(int destination) {
 		ArrayList<Integer> hops = getCircuitHops();
 
@@ -122,9 +128,9 @@ public class Client {
 			// save the symmetric keys
 			ArrayList<Key> symmetricKeys = (ArrayList<Key>) ce.keyList;
 			Connection c = new Connection(destination, sck, symmetricKeys);
-
-			Common.log("Connection Established.");
+			Common.log("[Client]: Connection Established.");
 			connMap.put(destination, c);
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -167,22 +173,22 @@ public class Client {
 			while(true) {
 				try {
 					Socket newConn = sck.accept();
+					Common.log("[Client]: Accepting connection");
 					OnionMessage omsg = OnionMessage.unpack(newConn);
 					if(omsg.getType() == OnionMessage.MsgType.KEY_REQUEST) {
 						CircuitHopKeyRequest chkr = (CircuitHopKeyRequest) CipherUtils.deserialize(omsg.getData());
-						if(chkr == null){
-							// TODO handle error 
-						}
 						// this will definitely be unique.
 						int hashKey = sck.getLocalPort();
 						Connection c = new Connection(hashKey, newConn, chkr.getKeys());
 						connMap.put(hashKey, c);
+						Common.log("[Client]: Connection accepted.");
 						// TODO write about this somehow	
 					} else {
 						// TODO handle error
 					}
 				} catch (Exception e) {
-					// TODO handle this.
+					e.printStackTrace();
+					System.exit(1);
 				}
 			}
 		}
