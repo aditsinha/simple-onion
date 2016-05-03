@@ -21,10 +21,13 @@ public class CircuitEstablishment {
 
     private Key hopPublicKey, hopSymmetricKey;
 
-    public CircuitEstablishment(List<Integer> hops, int destination) {
-	this.hops = hops;
-	isConnectionEstablished = false;
-	keyList = new ArrayList<>();
+    private Config c;
+
+    public CircuitEstablishment(List<Integer> hops, int destination, Config c) {
+		this.hops = hops;
+		isConnectionEstablished = false;
+		keyList = new ArrayList<>();
+	    this.c = c;
     }
 
     public byte[] processMessage(OnionMessage msg) {
@@ -36,11 +39,15 @@ public class CircuitEstablishment {
 	    hopPublicKey = null;
 	    hopSymmetricKey = null;
 	    if (keyList.size() == hops.size()) {
-		isConnectionEstablished = true;
+			isConnectionEstablished = true;
 	    }
 	    resp = new OnionMessage(OnionMessage.MsgType.KEY_REQUEST,
                                     CipherUtils.serialize(new CircuitHopKeyRequest(keyList)));
-            break;
+        if (isConnectionEstablished)
+	        Common.log("[CircuitEstablishment]: KEY_REQUEST to switch: " + c.getSwitch(hops.get(keyList.size() - 1)).getHostName());
+    	else 
+    		Common.log("[CircuitEstablishment]: KEY_REQUEST to endpoint: " + c.getEndpoint(hops.get(keyList.size() - 1)).getHostName());
+        break;
 	case KEY_REPLY:
 	    CircuitHopKeyReply reply = (CircuitHopKeyReply) CipherUtils.deserialize(msg.getData());
 	    hopPublicKey = reply.getKey();
@@ -57,14 +64,16 @@ public class CircuitEstablishment {
 
 	    int nextHop = (keyList.size() < hops.size() - 1) ? hops.get(keyList.size() + 1) : destination;
 
-            CircuitHopRequestMessage.Payload payload = new CircuitHopRequestMessage.Payload(nextHop, keyList);
+        CircuitHopRequestMessage.Payload payload = new CircuitHopRequestMessage.Payload(nextHop, keyList);
 
-            byte[] encryptedPayload = CipherUtils.applyCipher(CipherUtils.serialize(payload), CipherUtils.SYM_ALGORITHM, Cipher.ENCRYPT_MODE, hopSymmetricKey);
+        byte[] encryptedPayload = CipherUtils.applyCipher(CipherUtils.serialize(payload), CipherUtils.SYM_ALGORITHM, Cipher.ENCRYPT_MODE, hopSymmetricKey);
 
-            CircuitHopRequestMessage chrm = new CircuitHopRequestMessage(keyData, encryptedPayload);
+        CircuitHopRequestMessage chrm = new CircuitHopRequestMessage(keyData, encryptedPayload);
 
-            resp = new OnionMessage(OnionMessage.MsgType.HOP_REQUEST, CipherUtils.serialize(chrm));
-            break;
+        Common.log("[CircuitEstablishment]: HOP_REQUEST to switch: " + c.getSwitch(hops.get(keyList.size())).getHostName());
+
+        resp = new OnionMessage(OnionMessage.MsgType.HOP_REQUEST, CipherUtils.serialize(chrm));
+        break;
 	default:
 	    System.out.println("ERROR UNEXPECTED MESSAGE TYPE: " + msg.getType());
             System.exit(1);

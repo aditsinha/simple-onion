@@ -104,7 +104,7 @@ public class Client {
 		ArrayList<Integer> hops = getCircuitHops();
 		hops.add(destination);
 
-		CircuitEstablishment ce = new CircuitEstablishment(hops, destination);
+		CircuitEstablishment ce = new CircuitEstablishment(hops, destination, config);
 		
 		byte[] msg = ce.getFirstMessage();
 		OnionMessage response = null;
@@ -118,8 +118,9 @@ public class Client {
 				response = OnionMessage.unpack(sck);
 				// get the new message
 				msg = ce.processMessage(response);
-			}	
+			}
 
+			Common.log("[Client]: Circuit established.");
 			// the circuit has been established
 			// save the symmetric keys
 			ArrayList<Key> symmetricKeys = (ArrayList<Key>) ce.keyList;
