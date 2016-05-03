@@ -181,7 +181,10 @@ public class Client {
 						CircuitHopKeyRequest chkr = (CircuitHopKeyRequest) CipherUtils.deserialize(omsg.getData());
 						// this will definitely be unique.
 						int hashKey = sck.getLocalPort();
-						Connection c = new Connection(hashKey, newConn, chkr.getKeys());
+                                                List<Keys> secretKeys = chkr.getKeys();
+                                                Collections.reverse(secretKey);
+
+						Connection c = new Connection(hashKey, newConn, secretKeys);
 						connMap.put(hashKey, c);
 						Common.log("[Client]: Connection accepted with Anonymous" + hashKey);
 						// TODO write about this somehow	
