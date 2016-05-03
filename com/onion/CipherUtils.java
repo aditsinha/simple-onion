@@ -90,6 +90,7 @@ public class CipherUtils {
 	    return baos.toByteArray();
 	            
 	} catch (IOException e) {
+		e.printStackTrace();
 	    return null;       
 	}
 	    
