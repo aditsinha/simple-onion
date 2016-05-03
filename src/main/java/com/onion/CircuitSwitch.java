@@ -7,6 +7,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.net.*;
 import java.security.*;
 import javax.crypto.*;
+import java.util.Collections;
 
 
 public class CircuitSwitch {
@@ -60,7 +61,7 @@ public class CircuitSwitch {
 			initPool();
 		    }
 
-		    public void start() throws Exception {
+		public void start() throws Exception {
 			
 			for (Thread t : threads) {
 			    t.start();
@@ -83,7 +84,9 @@ public class CircuitSwitch {
 	    }	
 		}	
 	private class SwitchWorker implements Runnable {
-		LinkedBlockingQueue<Socket> requests;	
+		LinkedBlockingQueue<Socket> requests;
+		// a single thread can service a single connection.
+		Socket sck = null;
 
 		public SwitchWorker(LinkedBlockingQueue<Socket> requests) {
 			this.requests = requests;
@@ -92,20 +95,22 @@ public class CircuitSwitch {
 		public void run () {
 			while(true) {
 				try {
-					Socket sck = requests.take();
+					// accept a new connection only if currently not serving one.
+					if(sck == null)
+						sck = requests.take();
 					OnionMessage msg = OnionMessage.unpack(sck);
 					switch(msg.getType()) {
 						case DATA:
-							handleDataMessage(msg, sck);
+							handleDataMessage(msg);
 							break;
 						case HOP_REQUEST:
-							handleHopRequestMessage(msg, sck);
+							handleHopRequestMessage(msg);
 							break;
 						case POISON:
-							handlePoisonMessage(msg, sck);
+							handlePoisonMessage(msg);
 							break;
 						case KEY_REQUEST:
-							handleKeyRequestMessage(msg, sck);
+							handleKeyRequestMessage(msg);
 							break;	        
 					}
 				} catch (Exception e) {
@@ -115,11 +120,11 @@ public class CircuitSwitch {
 			}
 		}
 
-		private void handleHopRequestMessage(OnionMessage msg, Socket sck) {
+		private void handleHopRequestMessage(OnionMessage msg) {
 			byte[] decryptedData = CipherUtils.applyCipher(msg.getData(), "RSA/ECB/PKCSPadding", Cipher.DECRYPT_MODE, keys.getPrivate());
 			CircuitHopRequestMessage chrm = (CircuitHopRequestMessage) CipherUtils.deserialize(msg.getData());
 			if(chrm == null) {
-				System.out.println("[CircuitSwitch]: handleHopRequestMessage: cannot deserialize.");
+				Common.log("[CircuitSwitch]: handleHopRequestMessage: cannot deserialize.");
 				System.exit(1);
 			}
 
@@ -138,15 +143,32 @@ public class CircuitSwitch {
 			// will be changed. Send response 
 		}		
 
-		private void handleKeyRequestMessage(OnionMessage msg, Socket sck) {
+		private void handleKeyRequestMessage(OnionMessage msg) {
+			Common.log("[CircuitSwitch]: Key Request Message.");
 			CircuitHopKeyRequest req = (CircuitHopKeyRequest) CipherUtils.deserialize(msg.getData());
+			
+			// reverse the key list.
+			ArrayList<Key> hopKeys = (ArrayList<Key>)req.getKeys();
+			Collections.reverse(hopKeys);
+
+			// get the body of the response
 			CircuitHopKeyResponse resp = new CircuitHopKeyResponse(keys.getPublic());
-			// TODO: onionEncryptMessage this
-			// then actually serialize and encrypt that.	
-			// use sck to return that.
+			byte[] respBytes = CipherUtils.serialize(resp);
+
+			OnionMessage response = new OnionMessage(OnionMessage.MsgType.KEY_REPLY, respBytes);
+			byte[] responseEncr = CipherUtils.serialize(CipherUtils.onionEncryptMessage(response, hopKeys));
+			
+			// send.
+			try {
+				sck.getOutputStream().write(responseEncr, 0, responseEncr.length);
+				Common.log("[CircuitSwitch]: Response Sent.");
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
 		}
 
-		private void handleDataMessage(OnionMessage msg, Socket sck) {
+		private void handleDataMessage(OnionMessage msg) {
 			byte[] decryptedData = CipherUtils.applyCipher(msg.getData(), "AES/ECB/PKCS7Padding", Cipher.DECRYPT_MODE, connMap.get(sck).key);
 			Socket nextHop = connMap.get(sck).nextHop;	
 			try {
@@ -157,12 +179,19 @@ public class CircuitSwitch {
 			}
 		}
 
-		private void handlePoisonMessage(OnionMessage msg, Socket sck) {
-			handleDataMessage(msg, sck);
+		private void handlePoisonMessage(OnionMessage msg) {
+			handleDataMessage(msg);
 			// now delete from your hashtable.
-			Socket nextHop = connMap.get(sck).nextHop;
-			connMap.remove(sck);
-			connMap.remove(nextHop);
+			try {
+				Socket nextHop = connMap.get(sck).nextHop;
+				connMap.remove(sck);
+				connMap.remove(nextHop);
+				sck.close();
+				sck = null;
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(1);
 			}
+		}
 	}
 }

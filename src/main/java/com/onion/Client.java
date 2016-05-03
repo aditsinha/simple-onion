@@ -10,10 +10,50 @@ public class Client {
 	// maps endpoint to the information necessary
 	HashMap<Integer, Connection> connMap;
 	Config config;	
+	ServerSocket welcomeSocket;
+	boolean autoResponse = false;
 
 	public Client(String configName) {
 		config = new Config(configName);
 		connMap = new HashMap<Integer, Connection>();	
+		try {
+			welcomeSocket = new ServerSocket(Common.PORT);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		establishConnection();
+	}
+
+	// private void startCommandLoop() {
+	// 	String[] command;
+	// 	BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+	// 	while( (command = bf.readLine().split(" ")) != null) {
+	// 		if(command[0].equals("send")) {
+	// 			// implement this. TODO
+	// 		} else if (command[1].equals("respond")) {
+	// 			System.out.println("[Client]: Entering auto repond mode.");
+	// 			receiveMode();
+	// 		} else {
+	// 			System.out.println("Wrong command given. Available commands:");
+	// 			System.out.println("\t -- \t send <Host Number>");
+	// 			System.out.println("\t -- \t respond");
+	// 		}
+	// 	}
+	// }
+
+	private void receiveMode() {
+		try {
+			Socket sck = welcomeSocket.accept();
+			Common.log("[Client]: received connection!");
+		} catch (Exception e) {
+			System.exit(1);
+		}
+		// await connection
+
+		// accept connection. 
+
+		// do the protocol.
 	}
 
 	private void establishConnection() {
