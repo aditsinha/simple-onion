@@ -141,13 +141,17 @@ public class Client {
 		int numberOfHops = config.getSwitchesCount() / 2;
 		int addedHops = 0;
 		int nextHop = 0;
+		Common.log("[Client]: Chose circuit:");
 		for(int i = 0; i < numberOfHops; i++) {
 			do {
 				nextHop = rnd.nextInt(switchesAvailable);
 			} while (al.contains(nextHop));
 			
 			al.add(nextHop);
+			Common.log("\t " + i + " : " + config.getSwitch(nextHop).getHostName());
 		}
+
+
 
 		return al;
 	}
