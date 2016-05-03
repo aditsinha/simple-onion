@@ -68,12 +68,13 @@ public class Client {
 						continue;
 					}
 				} else if (command[0].equals("disconnect")) {
-
+					// TODO disconnect
 				}
 
 				System.out.println("Wrong command given. Available commands:");
 				System.out.println("\t -- \t send <Host Number>");
-				System.out.println("\t -- \t respond");
+				System.out.println("\t -- \t connect <Host Number>");
+				System.out.println("\t -- \t disconnect <Host Number>");
 				
 			}
 		} catch (Exception e) {
@@ -103,7 +104,7 @@ public class Client {
 		ArrayList<Integer> hops = getCircuitHops();
 		hops.add(destination);
 
-		CircuitEstablishment ce = new CircuitEstablishment(hops, destination);
+		CircuitEstablishment ce = new CircuitEstablishment(hops, destination, config);
 		
 		byte[] msg = ce.getFirstMessage();
 		OnionMessage response = null;
@@ -117,8 +118,9 @@ public class Client {
 				response = OnionMessage.unpack(sck);
 				// get the new message
 				msg = ce.processMessage(response);
-			}	
+			}
 
+			Common.log("[Client]: Circuit established.");
 			// the circuit has been established
 			// save the symmetric keys
 			ArrayList<Key> symmetricKeys = (ArrayList<Key>) ce.keyList;
@@ -140,13 +142,18 @@ public class Client {
 		int numberOfHops = config.getSwitchesCount() / 2;
 		int addedHops = 0;
 		int nextHop = 0;
+		Common.log("[Client]: Chose circuit:");
 		for(int i = 0; i < numberOfHops; i++) {
 			do {
 				nextHop = rnd.nextInt(switchesAvailable);
 			} while (al.contains(nextHop));
 			
 			al.add(nextHop);
+			Common.log("\t " + i + " : " + config.getSwitch(nextHop).getHostName());
 		}
+
+		// new line.
+		Common.log("");
 
 		return al;
 	}
