@@ -40,7 +40,7 @@ public class Client {
 			while( (command = bf.readLine().split(" ")) != null) {
 				if(command[0].equals("send")) {
 					try {
-						int targetHost = stringToInt(command[1], true);
+						int targetHost = stringToInt(command[1], false);
 
 						// merge the string back
 						StringBuffer message = new StringBuffer();
@@ -58,7 +58,7 @@ public class Client {
 					}
 				} else if (command[0].equals("connect")) {
 					try {
-						int targetHost = stringToInt(command[1], false);
+						int targetHost = stringToInt(command[1], true);
 						
 						establishConnection(targetHost);
 						continue;
@@ -86,14 +86,10 @@ public class Client {
 	private int stringToInt(String strInt, boolean contains) throws Exception {
 		int targetHost = Integer.parseInt(strInt);
 		if(targetHost < 0 || targetHost >= config.getEndpointsCount()) {
-			System.out.println("Illegal target host number");
-			System.out.println("Usage: connect <ID-of-host>");
 			throw new Exception();
 		}
 
 		if(connMap.contains(targetHost) == contains) {
-			System.out.println("Connection with this host already established");
-			System.out.println("Usage: connect <ID-of-host>");
 			throw new Exception();
 		}
 
@@ -126,9 +122,9 @@ public class Client {
 			// save the symmetric keys
 			ArrayList<Key> symmetricKeys = (ArrayList<Key>) ce.keyList;
 			Connection c = new Connection(destination, sck, symmetricKeys);
+
 			Common.log("Connection Established.");
 			connMap.put(destination, c);
-
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);
