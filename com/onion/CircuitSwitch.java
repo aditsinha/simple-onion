@@ -101,11 +101,11 @@ public class CircuitSwitch {
                     	try {
 	                    	if(sck.getInputStream().available() > 0) {
 		                    	msg = OnionMessage.unpack(sck);
-		                    	nextSendSocket = sck;
+		                    	nextSendSocket = nextHop;
 	                    		break;
 	                    	} else if (nextHop != null && nextHop.getInputStream().available() > 0) {
 	                    		msg = OnionMessage.unpack(nextHop);
-	                    		nextSendSocket = nextHop;
+	                    		nextSendSocket = sck;
 	                    		break;
 	                    	}
 	                    	Thread.sleep(100);
