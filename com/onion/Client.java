@@ -101,7 +101,7 @@ public class Client {
 			System.exit(1);
 		}
 	}
-	
+
 	private void establishConnection(int destination) {
 		ArrayList<Integer> hops = getCircuitHops();
 
@@ -181,7 +181,7 @@ public class Client {
 						int hashKey = sck.getLocalPort();
 						Connection c = new Connection(hashKey, newConn, chkr.getKeys());
 						connMap.put(hashKey, c);
-						Common.log("[Client]: Connection accepted.");
+						Common.log("[Client]: Connection accepted with Anonymous" + hashKey);
 						// TODO write about this somehow	
 					} else {
 						// TODO handle error
@@ -218,7 +218,7 @@ public class Client {
 
 
 		public Connection(int connKey, Socket sck, List<Key> symKeys) {
-			this(connKey, sck, symKeys, "Anonymous" + Integer.toString(connMap.size()));	
+			this(connKey, sck, symKeys, "Anonymous" + connKey);	
 		}
 
 		public void write(String msg) {
