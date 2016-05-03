@@ -180,7 +180,7 @@ public class Client {
 					if(omsg.getType() == OnionMessage.MsgType.KEY_REQUEST) {
 						CircuitHopKeyRequest chkr = (CircuitHopKeyRequest) CipherUtils.deserialize(omsg.getData());
 						// this will definitely be unique.
-						int hashKey = sck.getLocalPort();
+						int hashKey = newConn.getLocalPort();
 						Connection c = new Connection(hashKey, newConn, chkr.getKeys());
 						connMap.put(hashKey, c);
 						Common.log("[Client]: Connection accepted with Anonymous" + hashKey);
