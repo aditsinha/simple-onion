@@ -17,7 +17,7 @@ public class App
        	if(args[0].equals("CLIENT")) {
        		Client c = new Client(args[1]);
 
-       	} else if (args[1].equals("SWITCH")) {
+       	} else if (args[0].equals("SWITCH")) {
        		CircuitSwitch cs = new CircuitSwitch(args[1]);
        		while(true) {
        			try {
@@ -26,6 +26,8 @@ public class App
        				//ignore
        			}
        		}
-       	}
+       } else {
+         System.err.println("Usage: java App <CLIENT|SWITCH> <config_file_name>");
+       }
     }
 }

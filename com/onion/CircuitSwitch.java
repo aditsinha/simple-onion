@@ -15,6 +15,7 @@ public class CircuitSwitch {
 	KeyPair keys;
 
 	CircuitSwitch(String configName){
+		Common.log("[CircuitSwitch]: Initialize.");
 		keys = CipherUtils.generateRsaKeyPair();	
 		conf = new Config(configName);
 		try { 
