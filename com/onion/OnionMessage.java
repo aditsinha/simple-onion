@@ -48,14 +48,11 @@ public class OnionMessage implements Serializable {
         try {
             ObjectInputStream ois = new ObjectInputStream(sck.getInputStream());
             Integer length = (Integer) ois.readObject();
-            ois.close();
             ois = new ObjectInputStream(sck.getInputStream());
             MsgType type = OnionMessage.MsgType.values()[(Integer) ois.readObject()];
-            ois.close();
             ois = new ObjectInputStream(sck.getInputStream());
             byte[] data = new byte[length];
             ois.read(data, 0, length);
-            ois.close();
             return new OnionMessage(type, data);    
         } catch (Exception e) {
             e.printStackTrace();
