@@ -150,7 +150,7 @@ public class CircuitSwitch {
 				Common.log("[CircuitSwitch]: Cannot deserialize the request.");
 
 			// reverse the key list.
-			ArrayList<Key> hopKeys = (ArrayList<Key>)req.getKeys();
+			hopKeys = (ArrayList<Key>)req.getKeys();
 			Collections.reverse(hopKeys);
 
 			// get the body of the response
