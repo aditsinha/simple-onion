@@ -52,8 +52,9 @@ public class OnionMessage implements Serializable {
             int read = 0;
             while(read < 4) {
                 read += is.read(len, read, 4 - read);
+                System.out.println("Read : " + read + " bytes.");
             }
-            System.out.println("Read : " + Integer.toString(read) + " bytes.");
+
             int length = ByteBuffer.wrap(len).getInt();
 
             System.out.println("length : " + Integer.toString(length));
