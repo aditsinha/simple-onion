@@ -54,8 +54,8 @@ public class OnionMessage implements Serializable {
 
             byte[] object = new byte[length];
             int read = 0;
-            while(read < object.length) {
-                is.read(object, read, object.length-read);
+            while(read < length) {
+                read += is.read(object, read, length-read);
             }
 
             return (OnionMessage) CipherUtils.deserialize(object);    
