@@ -44,6 +44,8 @@ public class OnionMessage implements Serializable {
             e.printStackTrace();
             System.exit(1);
         }
+
+        return null;
     }
 
     public static OnionMessage unpack(Socket sck) {
@@ -69,5 +71,7 @@ public class OnionMessage implements Serializable {
             e.printStackTrace();
             System.exit(1);
         }
+
+        return null;
     }
 }
