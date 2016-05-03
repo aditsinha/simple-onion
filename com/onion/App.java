@@ -4,10 +4,17 @@ package com.onion;
  * Hello world!
  *
  */
+
+import java.security.*;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 public class App 
 {
     public static void main( String[] args )
     {
+
+      Security.addProvider(new BouncyCastleProvider());
     	if(args.length != 2) {
     		System.err.println("Wrong number of arguments.");
     		System.err.println("Usage: java App <CLIENT|SWITCH> <config_file_name>");
