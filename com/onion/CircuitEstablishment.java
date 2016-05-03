@@ -43,11 +43,9 @@ public class CircuitEstablishment {
 	    }
 	    resp = new OnionMessage(OnionMessage.MsgType.KEY_REQUEST,
                                     CipherUtils.serialize(new CircuitHopKeyRequest(keyList)));
-        if (isConnectionEstablished)
-	        Common.log("[CircuitEstablishment]: KEY_REQUEST to switch: " + c.getSwitch(hops.get(keyList.size() - 1)).getHostName());
-    	else 
-    		Common.log("[CircuitEstablishment]: KEY_REQUEST to endpoint: " + c.getEndpoint(destination).getHostName());
-        break;
+        Common.log("[CircuitEstablishment]: KEY_REQUEST to switch: " + c.getSwitch(hops.get(keyList.size() - 1)).getHostName());
+    	
+    	break;
 	case KEY_REPLY:
 	    CircuitHopKeyReply reply = (CircuitHopKeyReply) CipherUtils.deserialize(msg.getData());
 	    hopPublicKey = reply.getKey();
