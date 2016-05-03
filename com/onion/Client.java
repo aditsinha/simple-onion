@@ -146,7 +146,7 @@ public class Client {
 		Random rnd = new Random();
 		ArrayList<Integer> al = new ArrayList<Integer>();
 		int switchesAvailable = config.getSwitchesCount();	
-		int numberOfHops = config.getSwitchesCount() / 2;
+		int numberOfHops = config.getSwitchesCount();
 		int addedHops = 0;
 		int nextHop = 0;
 		Common.log("[Client]: Chose circuit:");
