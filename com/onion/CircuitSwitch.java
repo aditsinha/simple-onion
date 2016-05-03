@@ -56,11 +56,12 @@ public class CircuitSwitch {
 
 			while(true) {
 			    try {
-                    Common.log("Wating for connection...");
+                    Common.log("[CircuitSwitch]: Wating for connection...");
                     requests.add(welcomeSocket.accept());    
-                    Common.log("Accepted connection...");
+                    Common.log("[CircuitSwitch]: Accepted connection...");
 			    } catch (Exception e) {
 					e.printStackTrace();
+					System.exit(1);
 			    }
 			}
 	    }
@@ -91,7 +92,7 @@ public class CircuitSwitch {
 					// accept a new connection only if currently not serving one.
                     if(sck == null) {
                         sck = requests.take();
-                        Common.log("Dequeued connection");
+                        Common.log("[CircuitSwitch]: Dequeued connection");
                     }
 
 					OnionMessage msg = OnionMessage.unpack(sck);

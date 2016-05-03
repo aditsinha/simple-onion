@@ -151,7 +151,8 @@ public class Client {
 			Common.log("\t " + i + " : " + config.getSwitch(nextHop).getHostName());
 		}
 
-
+		// new line.
+		Common.log("");
 
 		return al;
 	}
