@@ -49,7 +49,10 @@ public class OnionMessage implements Serializable {
         try {
             InputStream is = sck.getInputStream();
             byte[] len = new byte[4];
-            is.read(len, 0, len.length);
+            int read = 0;
+            while(read < length) {
+                read += is.read(len, read, 4 - read);
+            }
             int length = ByteBuffer.wrap(len).getInt();
 
             byte[] object = new byte[length];
