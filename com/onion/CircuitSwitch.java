@@ -158,7 +158,7 @@ public class CircuitSwitch {
 			byte[] respBytes = CipherUtils.serialize(resp);
 
 			OnionMessage response = new OnionMessage(OnionMessage.MsgType.KEY_REPLY, respBytes);
-			byte[] responseEncr = CipherUtils.serialize(CipherUtils.onionEncryptMessage(response, hopKeys));
+			byte[] responseEncr = CipherUtils.onionEncryptMessage(response, hopKeys).pack();
 			
 			// send.
 			try {
