@@ -223,7 +223,7 @@ public class Client {
 			this.name = name;
 
 			wr = new Thread(new Writer(sck, msgsToSend, symKeys));
-			r = new Thread(new Reader(sck, name, this));
+			r = new Thread(new Reader(sck, name, this, connKey));
 			wr.start();
 			r.start();
 		}
@@ -260,11 +260,13 @@ public class Client {
 		String name;
 		// back pointer to kill the connection if poison received
 		Connection c;
+		int connKey;
 
-		public Reader(Socket sck, String name, Connection c) {
+		public Reader(Socket sck, String name, Connection c, int connKey) {
 			this.sck = sck;
 			this.name = name;
 			this.c = c;
+			this.connKey = connKey;
 		}
 
 		public void run() { 
@@ -276,7 +278,7 @@ public class Client {
 					if(incoming.getType() == OnionMessage.MsgType.DATA) {
 						message = new String(incoming.getData(), "US-ASCII");
 						// TODO Have a lock on stdin so that we don't get garbage.
-						System.out.println(name+" says: " + message);
+						System.out.println(name +"(" + connKey + ")" + " says: " + message);
 					} else if (incoming.getType() == OnionMessage.MsgType.POISON) {
 						c.killConnection();
 					} else {
