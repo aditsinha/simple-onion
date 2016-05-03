@@ -107,7 +107,10 @@ public class CircuitSwitch {
 							break;
 						case KEY_REQUEST:
 							handleKeyRequestMessage(msg);
-							break;	        
+							break;
+						default:
+							System.out.println("[CircuitSwitch]: Illegal packet type");
+							System.exit(1);    
 					}
 				} catch (Exception e) {
 					// this is bad
