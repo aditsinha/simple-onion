@@ -36,8 +36,8 @@ public class OnionMessage implements Serializable {
     public byte[] pack() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
-            ByteBuffer bb = ByteBuffer.allocate(4).putInt(data.length);
             byte[] thisObject = CipherUtils.serialize(this);
+            ByteBuffer bb = ByteBuffer.allocate(thisObject.length + 4).putInt(data.length);
             bb.put(thisObject, 0, thisObject.length);
             return bb.array();
         } catch (Exception e) {
