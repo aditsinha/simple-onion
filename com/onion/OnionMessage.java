@@ -41,12 +41,14 @@ public class OnionMessage implements Serializable {
             bb.put(thisObject, 0, thisObject.length);
             return bb.array();
         } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
 
     public static OnionMessage unpack(Socket sck) {
         try {
+            Common.log("[OnionMessaeg]: unpack");
             InputStream is = sck.getInputStream();
             byte[] len = new byte[4];
             int read = 0;
