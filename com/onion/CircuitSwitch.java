@@ -89,6 +89,9 @@ public class CircuitSwitch {
 					if(sck == null)
 						sck = requests.take();
 					OnionMessage msg = OnionMessage.unpack(sck);
+					if(msg == null)
+						Common.log("[CircuitSwitch]: run: null message!");
+
 					switch(msg.getType()) {
 						case DATA:
 							handleDataMessage(msg);

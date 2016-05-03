@@ -53,6 +53,7 @@ public class OnionMessage implements Serializable {
             ois.read(data, 0, length);
             return new OnionMessage(type, data);    
         } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
