@@ -37,7 +37,7 @@ public class OnionMessage implements Serializable {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
             byte[] thisObject = CipherUtils.serialize(this);
-            ByteBuffer bb = ByteBuffer.allocate(thisObject.length + 4).putInt(data.length);
+            ByteBuffer bb = ByteBuffer.allocate(thisObject.length + 4).putInt(thisObject.length);
             bb.put(thisObject, 0, thisObject.length);
             return bb.array();
         } catch (Exception e) {
@@ -64,7 +64,6 @@ public class OnionMessage implements Serializable {
             read = 0;
             while(read < length) {
                 read += is.read(object, read, length-read);
-                System.out.println("To read: " + Integer.toString(length-read));
             }
 
             return (OnionMessage) CipherUtils.deserialize(object);    
