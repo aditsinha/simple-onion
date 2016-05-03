@@ -12,8 +12,6 @@ import java.util.Collections;
 
 public class CircuitSwitch {
 	SwitchThreadPool serviceThreads;
-	// connection map
-	ConcurrentHashMap<Socket, Connection> connMap;
 	Config conf;
 	KeyPair keys;
 
@@ -22,22 +20,10 @@ public class CircuitSwitch {
 		conf = new Config(configName);
 		try { 
 			serviceThreads = new SwitchThreadPool(new ServerSocket(Common.PORT));
-			connMap = new ConcurrentHashMap<Socket, Connection>(8, (float)0.75, 8);
 			serviceThreads.start();
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);
-		}
-	}
-
-	// represents a single connection
-	private class Connection {
-		public Key key;
-		public Socket nextHop;
-
-		Connection(Key key, Socket nextHop) {
-			this.key = key;
-			this.nextHop = nextHop;
 		}
 	}
 
@@ -47,6 +33,7 @@ public class CircuitSwitch {
 	    LinkedBlockingQueue<Socket> requests;
 	    ArrayList<Thread> threads;
 	    ServerSocket welcomeSocket;
+	    Key key;
 
 	    public SwitchThreadPool(ServerSocket welcomeSocket) {
 			this(7, welcomeSocket);
@@ -87,6 +74,8 @@ public class CircuitSwitch {
 		LinkedBlockingQueue<Socket> requests;
 		// a single thread can service a single connection.
 		Socket sck = null;
+		Socket nextHop = null;
+		Key key;
 
 		public SwitchWorker(LinkedBlockingQueue<Socket> requests) {
 			this.requests = requests;
@@ -129,12 +118,9 @@ public class CircuitSwitch {
 			}
 
 			try {
-				Socket nextSwitch = new Socket();
-				nextSwitch.connect(new InetSocketAddress(conf.getSwitch(chrm.getNextNode()), Common.PORT));
-				Connection cnt = new Connection(chrm.getSecretKey(), nextSwitch);
-				connMap.put(sck, cnt);
-				Connection revCnt = new Connection(chrm.getSecretKey(), sck);
-				connMap.put(nextSwitch, revCnt);			
+				nextHop = new Socket();
+				nextHop.connect(new InetSocketAddress(conf.getSwitch(chrm.getNextNode()), Common.PORT));
+				key = chrm.getSecretKey(); 
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.exit(1);
@@ -169,8 +155,7 @@ public class CircuitSwitch {
 		}
 
 		private void handleDataMessage(OnionMessage msg) {
-			byte[] decryptedData = CipherUtils.applyCipher(msg.getData(), "AES/ECB/PKCS7Padding", Cipher.DECRYPT_MODE, connMap.get(sck).key);
-			Socket nextHop = connMap.get(sck).nextHop;	
+			byte[] decryptedData = CipherUtils.applyCipher(msg.getData(), "AES/ECB/PKCS7Padding", Cipher.DECRYPT_MODE, key);	
 			try {
 				nextHop.getOutputStream().write(decryptedData, 0 , decryptedData.length);	
 			} catch (Exception e) {
@@ -181,13 +166,12 @@ public class CircuitSwitch {
 
 		private void handlePoisonMessage(OnionMessage msg) {
 			handleDataMessage(msg);
-			// now delete from your hashtable.
 			try {
-				Socket nextHop = connMap.get(sck).nextHop;
-				connMap.remove(sck);
-				connMap.remove(nextHop);
+				// reset the state.
 				sck.close();
+				nextHop = null;
 				sck = null;
+				key = null;
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.exit(1);
