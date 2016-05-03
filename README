@@ -76,6 +76,13 @@ encrypted message containing all of the secret keys negotiated in the
 path in reverse order, so that the destination is able to use the same
 circuit to communicate with the client.
 
+The client and destination are able to send messages each other using
+the circuit.  When one of the ends wishes to close the circuit, it
+sends a Poison message to the other end.  When a node receives a
+poison message, it closes the connection from which it received the
+message, and forwards it to the next node in the circuit.  Therefore,
+all of the connections in the circuit are closed.
+
 
 External Resources Used
 -----------------------
