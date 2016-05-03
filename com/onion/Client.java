@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -172,6 +173,7 @@ public class Client {
 		public void run() {
 			while(true) {
 				try {
+                                    Common.log("[Client]: Waiting to accept connection");
 					Socket newConn = sck.accept();
 					Common.log("[Client]: Accepting connection");
 					OnionMessage omsg = OnionMessage.unpack(newConn);
@@ -262,7 +264,7 @@ public class Client {
 				try {
 					incoming = OnionMessage.unpack(sck);
 					if(incoming.getType() == OnionMessage.MsgType.DATA) {
-						message = new String(incoming.getData(), "US-ACII");
+						message = new String(incoming.getData(), "US-ASCII");
 						// TODO Have a lock on stdin so that we don't get garbage.
 						System.out.println(name+" says: " + message);
 					} else if (incoming.getType() == OnionMessage.MsgType.POISON) {
@@ -292,7 +294,8 @@ public class Client {
 				this.sck = sck;
 				this.os = sck.getOutputStream();
 				this.msgToSend = msgToSend;
-				this.symKeys = symKeys;
+				this.symKeys = new ArrayList<>(symKeys);
+                                //Collections.reverse(this.symKeys);
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.exit(1);
@@ -316,7 +319,7 @@ public class Client {
 		private void write(String message) throws Exception {
 			byte[] msg = message.getBytes("US-ASCII");
 			OnionMessage omsg = new OnionMessage(OnionMessage.MsgType.DATA, msg);
-			byte[] encrMsg = CipherUtils.serialize(CipherUtils.onionEncryptMessage(omsg, symKeys));
+			byte[] encrMsg = CipherUtils.onionEncryptMessage(omsg, symKeys);
 			os.write(encrMsg, 0, encrMsg.length);
 		}
 	}

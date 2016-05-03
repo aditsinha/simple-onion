@@ -66,7 +66,7 @@ public class CircuitEstablishment {
                 System.exit(1);
             }
 
-	    int nextHop = (keyList.size() < hops.size() - 1) ? hops.get(keyList.size() + 1) : destination;
+	    int nextHop = (keyList.size() < hops.size() - 1) ? hops.get(keyList.size() + 1) : (c.getSwitchesCount() + destination + 1);
 
         CircuitHopRequestMessage.Payload payload = new CircuitHopRequestMessage.Payload(nextHop, keyList);
 
