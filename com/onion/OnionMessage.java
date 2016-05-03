@@ -1,6 +1,7 @@
 package com.onion;
 
 import java.io.*;
+import java.nio.*;
 import java.net.*;
 
 public class OnionMessage implements Serializable {
@@ -35,7 +36,8 @@ public class OnionMessage implements Serializable {
     public byte[] pack() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
-            baos.write(CipherUtils.serialize(new Integer(data.length)));
+            byte[] length = ByteBuffer.allocate(4).putInt(data.length).array();
+            baos.write(length, 0, length.length);
             baos.write(CipherUtils.serialize(new Integer(this.type.ordinal())));
             baos.write(data, 0, data.length);
             return baos.toByteArray();
@@ -46,12 +48,16 @@ public class OnionMessage implements Serializable {
 
     public static OnionMessage unpack(Socket sck) {
         try {
+            InputStream is = sck.getInputStream();
+            byte[] len = new byte[4];
+            is.read(len, 0, len.length);
+            int length = ByteBuffer.wrap(len).getInt();
+
             ObjectInputStream ois = new ObjectInputStream(sck.getInputStream());
-            Integer length = (Integer) ois.readObject();
             ois = new ObjectInputStream(sck.getInputStream());
             MsgType type = OnionMessage.MsgType.values()[(Integer) ois.readObject()];
             byte[] data = new byte[length];
-            sck.getInputStream().read(data, 0, length);
+            is.read(data, 0, length);
             return new OnionMessage(type, data);    
         } catch (Exception e) {
             e.printStackTrace();
