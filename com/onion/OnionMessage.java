@@ -36,11 +36,12 @@ public class OnionMessage implements Serializable {
     public byte[] pack() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
-            byte[] length = ByteBuffer.allocate(4).putInt(data.length).array();
-            baos.write(length, 0, length.length);
+            ByteBuffer bb = ByteBuffer.allocate(4).putInt(data.length);
             baos.write(CipherUtils.serialize(new Integer(this.type.ordinal())));
             baos.write(data, 0, data.length);
-            return baos.toByteArray();
+            byte[] baosBytes = baos.toByteArray();
+            bb.put(baosBytes, 0, baosBytes.length);
+            return bb.array();
         } catch (Exception e) {
             return null;
         }
