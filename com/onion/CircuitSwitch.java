@@ -46,7 +46,7 @@ public class CircuitSwitch {
 			this.poolSize = poolSize;
 
 			initPool();
-		    }
+		}
 
 		public void start() throws Exception {
 			
@@ -56,9 +56,9 @@ public class CircuitSwitch {
 
 			while(true) {
 			    try {
-                                Common.log("Wating for connection...");
-                                requests.add(welcomeSocket.accept());    
-                                Common.log("Accepted connection...");
+                    Common.log("Wating for connection...");
+                    requests.add(welcomeSocket.accept());    
+                    Common.log("Accepted connection...");
 			    } catch (Exception e) {
 					e.printStackTrace();
 			    }
@@ -71,7 +71,8 @@ public class CircuitSwitch {
 			threads.add(new Thread(new SwitchWorker(requests)));
 	    	}
 	    }	
-		}	
+	}	
+	
 	private class SwitchWorker implements Runnable {
 		LinkedBlockingQueue<Socket> requests;
 		// a single thread can service a single connection.
@@ -88,10 +89,10 @@ public class CircuitSwitch {
 			while(true) {
 				try {
 					// accept a new connection only if currently not serving one.
-                                    if(sck == null) {
-                                        sck = requests.take();
-                                        Common.log("Dequeued connection");
-                                    }
+                    if(sck == null) {
+                        sck = requests.take();
+                        Common.log("Dequeued connection");
+                    }
 
 					OnionMessage msg = OnionMessage.unpack(sck);
 					switch(msg.getType()) {
@@ -125,13 +126,13 @@ public class CircuitSwitch {
 			}
 
 			try {
-                            Key symKey = 
-                                CipherUtils.getCipher(CipherUtils.ASYM_ALGORITHM, Cipher.UNWRAP_MODE, keys.getPrivate())
-                                .unwrap(chrm.getKeyData(), "AES", Cipher.SECRET_KEY);
+                Key symKey = 
+                    CipherUtils.getCipher(CipherUtils.ASYM_ALGORITHM, Cipher.UNWRAP_MODE, keys.getPrivate())
+                    .unwrap(chrm.getKeyData(), "AES", Cipher.SECRET_KEY);
 
-                            CircuitHopRequestMessage.Payload payload = 
-                                (CircuitHopRequestMessage.Payload) 
-                                CipherUtils.deserialize(CipherUtils.applyCipher(chrm.getPayloadData(), CipherUtils.SYM_ALGORITHM, Cipher.DECRYPT_MODE, symKey));
+                CircuitHopRequestMessage.Payload payload = 
+                    (CircuitHopRequestMessage.Payload) 
+                    CipherUtils.deserialize(CipherUtils.applyCipher(chrm.getPayloadData(), CipherUtils.SYM_ALGORITHM, Cipher.DECRYPT_MODE, symKey));
 
 
 				nextHop = new Socket();
@@ -156,9 +157,6 @@ public class CircuitSwitch {
 			Common.log("[CircuitSwitch]: Key Request Message.");
 			CircuitHopKeyRequest req = (CircuitHopKeyRequest) CipherUtils.deserialize(msg.getData());
 			
-			if(req == null)
-				Common.log("[CircuitSwitch]: Cannot deserialize the request.");
-
 			// reverse the key list.
 			hopKeys = (ArrayList<Key>)req.getKeys();
 			Collections.reverse(hopKeys);

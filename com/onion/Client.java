@@ -73,7 +73,8 @@ public class Client {
 
 				System.out.println("Wrong command given. Available commands:");
 				System.out.println("\t -- \t send <Host Number>");
-				System.out.println("\t -- \t respond");
+				System.out.println("\t -- \t connect <Host Number>");
+				System.out.println("\t -- \t disconnect <Host Number>");
 				
 			}
 		} catch (Exception e) {

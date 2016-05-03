@@ -29,7 +29,7 @@ public class OnionMessage implements Serializable {
 
     public byte[] getData() {
     return data;
-    }
+    } 
 
     // Format: length of msg connectionID MsgType DATA
     // MsgType is serialized as the ordinal value
@@ -42,24 +42,22 @@ public class OnionMessage implements Serializable {
             return bb.array();
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            System.exit(1);
         }
     }
 
     public static OnionMessage unpack(Socket sck) {
         try {
-            Common.log("[OnionMessaeg]: unpack");
+            Common.log("[OnionMessage]: unpack");
             InputStream is = sck.getInputStream();
             byte[] len = new byte[4];
             int read = 0;
             while(read < 4) {
                 read += is.read(len, read, 4 - read);
-                System.out.println("Read : " + read + " bytes.");
             }
 
             int length = ByteBuffer.wrap(len).getInt();
 
-            System.out.println("length : " + Integer.toString(length));
             byte[] object = new byte[length];
             read = 0;
             while(read < length) {
@@ -69,7 +67,7 @@ public class OnionMessage implements Serializable {
             return (OnionMessage) CipherUtils.deserialize(object);    
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            System.exit(1);
         }
     }
 }
