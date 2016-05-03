@@ -46,7 +46,7 @@ public class CircuitEstablishment {
         if (isConnectionEstablished)
 	        Common.log("[CircuitEstablishment]: KEY_REQUEST to switch: " + c.getSwitch(hops.get(keyList.size() - 1)).getHostName());
     	else 
-    		Common.log("[CircuitEstablishment]: KEY_REQUEST to endpoint: " + c.getEndpoint(hops.get(keyList.size() - 1)).getHostName());
+    		Common.log("[CircuitEstablishment]: KEY_REQUEST to endpoint: " + c.getEndpoint(destination).getHostName());
         break;
 	case KEY_REPLY:
 	    CircuitHopKeyReply reply = (CircuitHopKeyReply) CipherUtils.deserialize(msg.getData());
