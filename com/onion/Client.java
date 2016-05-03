@@ -45,7 +45,7 @@ public class Client {
 						if(targetHost < 0) {
 							System.out.println("Illegal targer host number.");
 							continue;
-						} else if (!connMap.contains(targetHost)) {
+						} else if (!connMap.containsKey(targetHost)) {
 							System.out.println("Connection with this host not established");
 							continue;
 						}
@@ -73,7 +73,7 @@ public class Client {
 							throw new Exception();
 						}
 
-						if(connMap.contains(targetHost)) {
+						if(connMap.containsKey(targetHost)) {
 							System.out.println("Connection with this host already established");
 							System.out.println("Usage: connect <ID-of-host>");
 							throw new Exception();
@@ -101,24 +101,7 @@ public class Client {
 			System.exit(1);
 		}
 	}
-
-	private int stringToInt(String strInt, boolean contains) throws Exception {
-		int targetHost = Integer.parseInt(strInt);
-		if(targetHost < 0 || targetHost >= config.getEndpointsCount()) {
-			System.out.println("Illegal target host number");
-			System.out.println("Usage: connect <ID-of-host>");
-			throw new Exception();
-		}
-
-		if(connMap.contains(targetHost) == contains) {
-			System.out.println("Connection with this host already established");
-			System.out.println("Usage: connect <ID-of-host>");
-			throw new Exception();
-		}
-
-		return targetHost;
-	}
-
+	
 	private void establishConnection(int destination) {
 		ArrayList<Integer> hops = getCircuitHops();
 
