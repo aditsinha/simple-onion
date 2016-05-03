@@ -159,7 +159,16 @@ public class CircuitSwitch {
 
 
 				nextHop = new Socket();
-				nextHop.connect(new InetSocketAddress(conf.getSwitch(payload.getNextNode()), Common.PORT));
+				int nextNode = payload.getNextNode();
+				InetAddress nextNodeAddr = null;
+				if(nextNode >= conf.getSwitchesCount()) {
+					nextNode -= conf.getSwitchesCount();
+					nextNodeAddr = conf.getEndpoint(nextNode); 
+				} else {
+					nextNodeAddr = conf.getSwitch(nextNode);
+				}
+
+				nextHop.connect(new InetSocketAddress(nextNodeAddr, Common.PORT));
 				key = symKey;
 
 				// create an answer message.
