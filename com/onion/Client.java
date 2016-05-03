@@ -19,6 +19,7 @@ public class Client {
 	Config config;	
 	ServerSocket welcomeSocket;
 	boolean autoResponse = false;
+    Random rand = new Random();
 	Thread acceptor;
 
 	public Client(String configName) {
@@ -180,9 +181,13 @@ public class Client {
 					if(omsg.getType() == OnionMessage.MsgType.KEY_REQUEST) {
 						CircuitHopKeyRequest chkr = (CircuitHopKeyRequest) CipherUtils.deserialize(omsg.getData());
 						// this will definitely be unique.
-						int hashKey = newConn.getLocalPort();
-                                                List<Keys> secretKeys = chkr.getKeys();
-                                                Collections.reverse(secretKey);
+                                                int hashKey;
+                                                do {
+                                                    hashKey = config.getEndpointsCount() + rand.nextInt(1000 - config.getEndpointsCount());
+                                                } while (connMap.contains(hashKey));
+
+                                                List<Key> secretKeys = chkr.getKeys();
+                                                Collections.reverse(secretKeys);
 
 						Connection c = new Connection(hashKey, newConn, secretKeys);
 						connMap.put(hashKey, c);
