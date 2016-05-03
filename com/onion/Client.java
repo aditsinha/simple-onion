@@ -105,7 +105,7 @@ public class Client {
 
 		CircuitEstablishment ce = new CircuitEstablishment(hops, destination);
 		
-		byte[] msg = ce.getFirstMessage().pack();
+		byte[] msg = ce.getFirstMessage();
 		OnionMessage response = null;
 		try {
 			Socket sck = new Socket();
@@ -116,8 +116,7 @@ public class Client {
 				os.write(msg, 0, msg.length);
 				response = OnionMessage.unpack(sck);
 				// get the new message
-				response = ce.processMessage(response);
-				msg = CipherUtils.serialize(response);
+				msg = ce.processMessage(response);
 			}	
 
 			// the circuit has been established

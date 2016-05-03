@@ -27,7 +27,8 @@ public class CircuitEstablishment {
 	keyList = new ArrayList<>();
     }
 
-    public OnionMessage processMessage(OnionMessage msg) {
+    public byte[] processMessage(OnionMessage msg) {
+        OnionMessage resp = null;
 	switch (msg.getType()) {
 	case HOP_REPLY:
 	    // established connection.  make the next hop
@@ -37,28 +38,41 @@ public class CircuitEstablishment {
 	    if (keyList.size() == hops.size()) {
 		isConnectionEstablished = true;
 	    }
-	    return new OnionMessage(OnionMessage.MsgType.KEY_REQUEST,
-				    CipherUtils.serialize(new CircuitHopKeyRequest(keyList)));
+	    resp = new OnionMessage(OnionMessage.MsgType.KEY_REQUEST,
+                                    CipherUtils.serialize(new CircuitHopKeyRequest(keyList)));
+            break;
 	case KEY_REPLY:
 	    CircuitHopKeyReply reply = (CircuitHopKeyReply) CipherUtils.deserialize(msg.getData());
 	    hopPublicKey = reply.getKey();
 	    hopSymmetricKey = new SecretKeySpec(CipherUtils.getRandomBytes(16), "AES");
+
+            byte[] keyData = null;
+            try {
+                keyData = CipherUtils.getCipher(CipherUtils.ASYM_ALGORITHM, Cipher.WRAP_MODE, hopPublicKey)
+                    .wrap(hopSymmetricKey);
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+
 	    int nextHop = (keyList.size() < hops.size() - 1) ? hops.get(keyList.size() + 1) : destination;
-	    byte[] requestMessageData =
-		CipherUtils.serialize(new CircuitHopRequestMessage(nextHop,
-								   hopSymmetricKey,
-								   keyList));
-	    return new OnionMessage(OnionMessage.MsgType.HOP_REQUEST,
-				    CipherUtils.applyCipher(requestMessageData, CipherUtils.ASYM_ALGORITHM,
-							    Cipher.ENCRYPT_MODE,
-							    hopPublicKey));
+
+            CircuitHopRequestMessage.Payload payload = new CircuitHopRequestMessage.Payload(nextHop, keyList);
+
+            byte[] encryptedPayload = CipherUtils.applyCipher(CipherUtils.serialize(payload), CipherUtils.SYM_ALGORITHM, Cipher.ENCRYPT_MODE, hopSymmetricKey);
+
+            CircuitHopRequestMessage chrm = new CircuitHopRequestMessage(keyData, encryptedPayload);
+
+            resp = new OnionMessage(OnionMessage.MsgType.HOP_REQUEST, CipherUtils.serialize(chrm));
+            break;
 	default:
 	    System.out.println("ERROR UNEXPECTED MESSAGE TYPE: " + msg.getType());
-	    return null;
+            System.exit(1);
 	}
+        return CipherUtils.onionEncryptMessage(resp, keyList);
     }
 
-    public OnionMessage getFirstMessage() {
-	return new OnionMessage(OnionMessage.MsgType.KEY_REQUEST, CipherUtils.serialize(new CircuitHopKeyRequest(keyList)));
+    public byte[] getFirstMessage() {
+	return new OnionMessage(OnionMessage.MsgType.KEY_REQUEST, CipherUtils.serialize(new CircuitHopKeyRequest(keyList))).pack();
     }
 }

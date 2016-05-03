@@ -19,7 +19,6 @@ CLASSES = \
 	com/onion/CircuitEstablishment \
 	com/onion/App \
 	com/onion/CircuitHopKeyRequest \
-	com/onion/CircuitHopKeyResponse \
 	com/onion/Common \
 	com/onion/Client \
 	com/onion/Config \

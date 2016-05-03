@@ -56,7 +56,9 @@ public class CircuitSwitch {
 
 			while(true) {
 			    try {
-					requests.add(welcomeSocket.accept());    
+                                Common.log("Wating for connection...");
+                                requests.add(welcomeSocket.accept());    
+                                Common.log("Accepted connection...");
 			    } catch (Exception e) {
 					e.printStackTrace();
 			    }
@@ -86,8 +88,10 @@ public class CircuitSwitch {
 			while(true) {
 				try {
 					// accept a new connection only if currently not serving one.
-					if(sck == null)
-						sck = requests.take();
+                                    if(sck == null) {
+                                        sck = requests.take();
+                                        Common.log("Dequeued connection");
+                                    }
 
 					OnionMessage msg = OnionMessage.unpack(sck);
 					switch(msg.getType()) {
@@ -114,7 +118,6 @@ public class CircuitSwitch {
 
 		private void handleHopRequestMessage(OnionMessage msg) {
 			Common.log("[CircuitSwitch]: Hop Request Message Received");
-			byte[] decryptedData = CipherUtils.applyCipher(msg.getData(), "RSA/ECB/PKCSPadding", Cipher.DECRYPT_MODE, keys.getPrivate());
 			CircuitHopRequestMessage chrm = (CircuitHopRequestMessage) CipherUtils.deserialize(msg.getData());
 			if(chrm == null) {
 				Common.log("[CircuitSwitch]: handleHopRequestMessage: cannot deserialize.");
@@ -122,20 +125,27 @@ public class CircuitSwitch {
 			}
 
 			try {
+                            Key symKey = 
+                                CipherUtils.getCipher(CipherUtils.ASYM_ALGORITHM, Cipher.UNWRAP_MODE, keys.getPrivate())
+                                .unwrap(chrm.getKeyData(), "AES", Cipher.SECRET_KEY);
+
+                            CircuitHopRequestMessage.Payload payload = 
+                                (CircuitHopRequestMessage.Payload) 
+                                CipherUtils.deserialize(CipherUtils.applyCipher(chrm.getPayloadData(), CipherUtils.SYM_ALGORITHM, Cipher.DECRYPT_MODE, symKey));
+
+
 				nextHop = new Socket();
-				nextHop.connect(new InetSocketAddress(conf.getSwitch(chrm.getNextNode()), Common.PORT));
-				key = chrm.getSecretKey();
+				nextHop.connect(new InetSocketAddress(conf.getSwitch(payload.getNextNode()), Common.PORT));
+				key = symKey;
 
 				// create an answer message.
 				CircuitHopReplyMessage resp = new CircuitHopReplyMessage();
 				byte[] respBytes = CipherUtils.serialize(resp);
 
 				OnionMessage response = new OnionMessage(OnionMessage.MsgType.HOP_REPLY, respBytes);
-				byte[] responseEncr = CipherUtils.serialize(CipherUtils.onionEncryptMessage(response, hopKeys));
-
+				byte[] responseEncr = CipherUtils.onionEncryptMessage(response, hopKeys);
 				sck.getOutputStream().write(responseEncr, 0, responseEncr.length);
 				Common.log("[CircuitSwitch]: Response Sent.");
-
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.exit(1);
@@ -154,11 +164,11 @@ public class CircuitSwitch {
 			Collections.reverse(hopKeys);
 
 			// get the body of the response
-			CircuitHopKeyResponse resp = new CircuitHopKeyResponse(keys.getPublic());
+			CircuitHopKeyReply resp = new CircuitHopKeyReply(keys.getPublic());
 			byte[] respBytes = CipherUtils.serialize(resp);
 
 			OnionMessage response = new OnionMessage(OnionMessage.MsgType.KEY_REPLY, respBytes);
-			byte[] responseEncr = CipherUtils.onionEncryptMessage(response, hopKeys).pack();
+			byte[] responseEncr = CipherUtils.onionEncryptMessage(response, hopKeys);
 			
 			// send.
 			try {
@@ -172,7 +182,7 @@ public class CircuitSwitch {
 
 		private void handleDataMessage(OnionMessage msg) {
 			Common.log("[CircuitSwitch]: Data Message.");
-			byte[] decryptedData = CipherUtils.applyCipher(msg.getData(), "AES/ECB/PKCS7Padding", Cipher.DECRYPT_MODE, key);	
+			byte[] decryptedData = CipherUtils.applyCipher(msg.getData(), CipherUtils.SYM_ALGORITHM, Cipher.DECRYPT_MODE, key);	
 			try {
 				nextHop.getOutputStream().write(decryptedData, 0 , decryptedData.length);	
 			} catch (Exception e) {
