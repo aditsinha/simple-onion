@@ -143,6 +143,9 @@ public class CircuitSwitch {
 			Common.log("[CircuitSwitch]: Key Request Message.");
 			CircuitHopKeyRequest req = (CircuitHopKeyRequest) CipherUtils.deserialize(msg.getData());
 			
+			if(req == null)
+				Common.log("[CircuitSwitch]: Cannot deserialize the request.");
+
 			// reverse the key list.
 			ArrayList<Key> hopKeys = (ArrayList<Key>)req.getKeys();
 			Collections.reverse(hopKeys);
@@ -165,6 +168,7 @@ public class CircuitSwitch {
 		}
 
 		private void handleDataMessage(OnionMessage msg) {
+			Common.log("[CircuitSwitch]: Data Message.");
 			byte[] decryptedData = CipherUtils.applyCipher(msg.getData(), "AES/ECB/PKCS7Padding", Cipher.DECRYPT_MODE, key);	
 			try {
 				nextHop.getOutputStream().write(decryptedData, 0 , decryptedData.length);	
@@ -175,6 +179,7 @@ public class CircuitSwitch {
 		}
 
 		private void handlePoisonMessage(OnionMessage msg) {
+			Common.log("[CircuitSwitch]: Poison Message.");
 			handleDataMessage(msg);
 			try {
 				// reset the state.

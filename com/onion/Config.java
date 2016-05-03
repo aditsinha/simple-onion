@@ -14,6 +14,7 @@ public class Config {
 	// double new-line
 	// a list of available end points
 	public Config(String configName) {
+		Common.log("[Config]: Reading Config File.");
 		switches = new ArrayList<InetAddress>();
 		endpoints = new ArrayList<InetAddress>();
 
@@ -24,18 +25,22 @@ public class Config {
 		    BufferedReader buffRead = new BufferedReader(fileReader);
 
 			// populate the set of switches
+			Common.log("[Config]: Switches: ");
 			String configLine;
 			while((configLine = buffRead.readLine()) != null || configLine == "") {
 				try {
+					Common.log("\t [Config]: " + configLine);
 					switches.add(InetAddress.getByName(configLine));
 				} catch (UnknownHostException e) {
 					System.err.println("[Config]: Could not find host: " + configLine);
 				}
 			}
 
+			Common.log("[Config]: Endpoints: ");
 			// populate the set of endpoints
 			while((configLine = buffRead.readLine()) != null) {
 				try {
+					Common.log("\t [Config]: " + configLine);
 					endpoints.add(InetAddress.getByName(configLine));
 				} catch (UnknownHostException e) {
 					System.err.println("[Config]: Could not find host: " + configLine);
