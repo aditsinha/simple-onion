@@ -18,7 +18,7 @@ public class CircuitHopRequestMessage implements Serializable {
     public int getNextNode() {
 	return nextNode;
     }
-
+    
     public Key getSecretKey() {
 	return secretKey;
     }

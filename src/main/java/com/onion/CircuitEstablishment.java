@@ -18,9 +18,9 @@ public class CircuitEstablishment {
     private HopSpec outstandingHop;
     public List<HopSpec> establishedHops;
 
-    private boolean isKeyRequestSent;
-    
-    private boolean isConnectionEstablished;
+    public boolean isConnectionEstablished;
+
+    private Key hopPublicKey, hopSymmetricKey;
 
     public CircuitEstablishment(List<Integer> hops, int destination) {
 	this.hops = hops;
@@ -61,41 +61,8 @@ public class CircuitEstablishment {
 	    
     }
 
-    public byte[] getNextMessage() {
-	Serializable msg = null;
-
-	if (establishedHops.size() < hops.size()) {
-	    // haven't established all of the hops yet
-	    if (outstandingHop == null) {
-			// ready to do another handshake
-			int nextHopNode = (establishedHops.size() < hops.size() - 1) ? hops.get(establishedHops.size() + 1) : destination;
-			byte[] keyData = CipherUtils.getRandomBytes(16);
-			outstandingHop = new HopSpec();
-			outstandingHop.setKey(new SecretKeySpec(keyData, "AES"));
-
-			msg = new CircuitHopRequestMessage(nextHopNode, outstandingHop.getKey());
-	    }
-
-	    // else we aren't ready to do another handshake
-	            
-	} else if (!isConnectionEstablished) {
-	    // need to send the entire chain to the other end.  send it in reverse though
-	    List<HopSpec> reversedCircuit = new ArrayList<>(establishedHops);
-	    Collections.reverse(reversedCircuit);
-	    isConnectionEstablished = true;
-	    msg = new CircuitEstablishmentMessage(reversedCircuit);
-	            
-	} else {
-	    assert false;
-	            
- 	}
-
-	if (msg == null)
-	    return null;
-
-	byte[] msgData = CipherUtils.serialize(msg);
-	return CipherUtils.onionEncryptMessage(msgData, establishedHops);
-	    
+    public OnionMessage getFirstMessage() {
+	return new OnionMessage(OnionMessage.MsgType.KEY_REQUEST, CipherUtils.serialize(new CircuitHopKeyRequest(keyList)));
     }
     
 }

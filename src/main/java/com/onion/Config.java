@@ -20,6 +20,27 @@ public class Config {
 		FileReader fileReader;
 		try {
 		    fileReader = new FileReader(new File(configName));
+
+		    BufferedReader buffRead = new BufferedReader(fileReader);
+
+			// populate the set of switches
+			String configLine;
+			while((configLine = buffRead.readLine()) != null || configLine == "") {
+				try {
+					switches.add(InetAddress.getByName(configLine));
+				} catch (UnknownHostException e) {
+					System.err.println("[Config]: Could not find host: " + configLine);
+				}
+			}
+
+			// populate the set of endpoints
+			while((configLine = buffRead.readLine()) != null) {
+				try {
+					endpoints.add(InetAddress.getByName(configLine));
+				} catch (UnknownHostException e) {
+					System.err.println("[Config]: Could not find host: " + configLine);
+				}
+			}
 		} catch (FileNotFoundException e) {
 		    System.err.println("[Config]: Cannot find config file: " + configName + ".");
 		    System.exit(1);
@@ -28,34 +49,13 @@ public class Config {
 		    e.printStackTrace();
 		    System.exit(1);
 		}
-		
-		BufferedReader buffRead = new BufferedReader(fileReader);
-
-		// populate the set of switches
-		String configLine;
-		while((configLine = bufferedReader.readLine()) != null || configLine == "") {
-			try {
-				switches.add(InetAddress.getByName(configLine));
-			} catch (UnknownHostException e) {
-				System.err.println("[Config]: Could not find host: " + configLine);
-			}
-		}
-
-		// populate the set of endpoints
-		while((configLine = bufferedReader.readLine()) != null) {
-			try {
-				endpoints.add(InetAddress.getByName(configLine));
-			} catch (UnknownHostException e) {
-				System.err.println("[Config]: Could not find host: " + configLine);
-			}
-		}
 	}
 
 	public int getEndpointsCount() {
 		return endpoints.size();
 	}
 
-	public InetAddress getEndpoints(int i) {
+	public InetAddress getEndpoint(int i) {
 		return endpoints.get(i);
 	}
 
