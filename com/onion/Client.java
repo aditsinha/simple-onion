@@ -102,7 +102,6 @@ public class Client {
 
 	private void establishConnection(int destination) {
 		ArrayList<Integer> hops = getCircuitHops();
-		hops.add(destination);
 
 		CircuitEstablishment ce = new CircuitEstablishment(hops, destination, config);
 		
