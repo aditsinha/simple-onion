@@ -40,7 +40,7 @@ public class Client {
 			while( (command = bf.readLine().split(" ")) != null) {
 				if(command[0].equals("send")) {
 					try {
-						int targetHost = stringToInt(command[1], false);
+						int targetHost = stringToInt(command[1], true);
 
 						// merge the string back
 						StringBuffer message = new StringBuffer();
@@ -58,7 +58,7 @@ public class Client {
 					}
 				} else if (command[0].equals("connect")) {
 					try {
-						int targetHost = stringToInt(command[1], true);
+						int targetHost = stringToInt(command[1], false);
 						
 						establishConnection(targetHost);
 						continue;

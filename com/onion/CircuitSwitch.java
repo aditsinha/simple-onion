@@ -79,6 +79,7 @@ public class CircuitSwitch {
 		// a single thread can service a single connection.
 		Socket sck = null;
 		Socket nextHop = null;
+		Socket nextSendSocket = null;
 		Key key;
 		ArrayList<Key> hopKeys = null;
 
@@ -95,7 +96,25 @@ public class CircuitSwitch {
                         Common.log("[CircuitSwitch]: Dequeued connection");
                     }
 
-					OnionMessage msg = OnionMessage.unpack(sck);
+                    OnionMessage msg = null;
+                    while(true) {
+                    	try {
+	                    	if(sck.getInputStream().available() > 0) {
+		                    	msg = OnionMessage.unpack(sck);
+		                    	nextSendSocket = nextHop;
+	                    		break;
+	                    	} else if (nextHop != null && nextHop.getInputStream().available() > 0) {
+	                    		msg = OnionMessage.unpack(nextHop);
+	                    		nextSendSocket = sck;
+	                    		break;
+	                    	}
+	                    	Thread.sleep(100);
+	                    } catch (Exception e) {
+	                    	e.printStackTrace();
+	                    	System.exit(1);
+	                    }
+	                }
+
 					switch(msg.getType()) {
 						case DATA:
 							handleDataMessage(msg);
@@ -186,7 +205,7 @@ public class CircuitSwitch {
 			Common.log("[CircuitSwitch]: Data Message.");
 			byte[] decryptedData = CipherUtils.applyCipher(msg.getData(), CipherUtils.SYM_ALGORITHM, Cipher.DECRYPT_MODE, key);	
 			try {
-				nextHop.getOutputStream().write(decryptedData, 0 , decryptedData.length);	
+				nextSendSocket.getOutputStream().write(decryptedData, 0 , decryptedData.length);	
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.exit(1);
@@ -203,6 +222,7 @@ public class CircuitSwitch {
 				sck = null;
 				key = null;
 				hopKeys = null;
+				nextSendSocket = null;
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.exit(1);
