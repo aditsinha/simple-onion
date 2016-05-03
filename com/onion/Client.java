@@ -131,7 +131,7 @@ public class Client {
 			ArrayList<Key> symmetricKeys = (ArrayList<Key>) ce.keyList;
 			String name = config.getEndpoint(destination).getHostName();
 			name = name.substring(0, name.indexOf("."));
-			Connection c = new Connection(destination, sck, symmetricKeys);
+			Connection c = new Connection(destination, sck, symmetricKeys, name);
 			Common.log("[Client]: Connection Established.");
 			connMap.put(destination, c);
 
