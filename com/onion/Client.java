@@ -260,7 +260,7 @@ public class Client {
 			try {
 				// note -- connection is closed by the first hop, not us.
 				byte[] poisonMsg = new OnionMessage(OnionMessage.MsgType.POISON, new byte[0]).pack();
-				sck.write(poisonMsg, 0, poisonMsg.length);
+				sck.getOutputStream().write(poisonMsg, 0, poisonMsg.length);
 				wr.interrupt();
 				r.interrupt();
 				connMap.remove(connKey);
