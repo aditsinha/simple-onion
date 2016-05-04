@@ -130,6 +130,7 @@ public class CircuitSwitch {
 							break;
 						case KEY_REPLY:
 							handleKeyReplyMessage(msg);
+							break;
 						default:
 							System.out.println("[CircuitSwitch]: Illegal packet type");
 							System.exit(1);    
