@@ -98,7 +98,7 @@ public class Client {
 
 						Connection c = connMap.get(targetHost);
 						// notice that this removes the connection from the hashtable too.
-						c.killConnection();
+						c.disconnect();
 						continue;
 					} catch (Exception e) {
 						System.out.println("Illegal target host number");
@@ -256,7 +256,16 @@ public class Client {
 			}
 		}
 
-		public void killConnection() {
+		// shutsdown the connection.
+		public void removeConnection() {
+			wr.interrupt();
+			r.interrupt();
+			sck.close();
+			connMap.remove(connKey);
+		}
+
+		// sends the poison message
+		public void disconnect() {
 			try {
 				// note -- connection is closed by the first hop, not us.
 				byte[] poisonMsg = new OnionMessage(OnionMessage.MsgType.POISON, new byte[0]).pack();
@@ -297,7 +306,8 @@ public class Client {
 						// TODO Have a lock on stdin so that we don't get garbage.
 						System.out.println(name +"(" + connKey + ")" + " says: " + message);
 					} else if (incoming.getType() == OnionMessage.MsgType.POISON) {
-						c.killConnection();
+						Common.log("[Client]: Received Poison Message. Disconnect.");
+						c.removeConnection();
 					} else {
 						// error
 						// TODO handle
