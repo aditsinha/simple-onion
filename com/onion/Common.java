@@ -1,5 +1,12 @@
 package com.onion;
 
+/*
+	Common.java
+
+	Contains common variables and logging functions.
+
+*/
+
 public class Common {
 	// port on which all server sockets will operate.
 	public static final int PORT = 6789;

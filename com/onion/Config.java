@@ -4,15 +4,34 @@ import java.util.ArrayList;
 import java.io.*;
 import java.net.*;
 
+/*
+	Config.java
+
+	Contains the parsing functions for config and objects holding
+	the necessary adresses specified within config. Config format:
+
+	SWITCH_NAME_1\n
+	SWITCH_NAME_2\n
+	\n
+	ENDPOINT_NAME_1\n
+	ENDPOINT_NAME_2\n
+
+	Example:
+
+	lion.zoo.cs.yale.edu
+	monkey.zoo.cs.yale.edu
+	tiger.zoo.cs.yale.edu
+	hare.zoo.cs.yale.edu
+
+	tick.zoo.cs.yale.edu
+	newt.zoo.cs.yale.edu
+*/
+
 public class Config {
 	private ArrayList<InetAddress> switches;
 	private ArrayList<InetAddress> endpoints;
 
-	// Read in hosts from configuration file and resolve addresses.
-	//
-	// The format of the config: a list of enter-separated switches
-	// double new-line
-	// a list of available end points
+	// Read in hosts and switches from configuration file and resolve addresses.
 	public Config(String configName) {
 		Common.log("[Config]: Reading Config File.");
 		switches = new ArrayList<InetAddress>();
