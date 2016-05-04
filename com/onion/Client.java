@@ -260,8 +260,13 @@ public class Client {
 		public void removeConnection() {
 			wr.interrupt();
 			r.interrupt();
-			sck.close();
-			connMap.remove(connKey);
+			try {
+				sck.close();
+				connMap.remove(connKey);
+			} catch (Exception e) {
+				// ignore this exception.
+				return;
+			}
 		}
 
 		// sends the poison message
