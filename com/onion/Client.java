@@ -120,6 +120,7 @@ public class Client {
 	}
 
 	private void establishConnection(int destination) {
+		Common.log("[Client]: Establishing circuit to " + config.getEndpoint(destination).getHostName());
 		ArrayList<Integer> hops = getCircuitHops();
 
 		CircuitEstablishment ce = new CircuitEstablishment(hops, destination, config);
@@ -264,7 +265,7 @@ public class Client {
 				sck.close();
 				connMap.remove(connKey);
 			} catch (Exception e) {
-				// ignore this exception.
+				e.printStackTrace();
 				return;
 			}
 		}

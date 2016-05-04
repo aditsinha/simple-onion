@@ -24,6 +24,7 @@ public class CircuitEstablishment {
     private Config c;
 
     public CircuitEstablishment(List<Integer> hops, int destination, Config c) {
+        this.destination = destination;
 		this.hops = hops;
 		isConnectionEstablished = false;
 		keyList = new ArrayList<>();
@@ -66,7 +67,7 @@ public class CircuitEstablishment {
                 System.exit(1);
             }
 
-	    int nextHop = (keyList.size() < hops.size() - 1) ? hops.get(keyList.size() + 1) : (c.getSwitchesCount() + destination + 1);
+	    int nextHop = (keyList.size() < hops.size() - 1) ? hops.get(keyList.size() + 1) : (c.getSwitchesCount() + destination);
 
         CircuitHopRequestMessage.Payload payload = new CircuitHopRequestMessage.Payload(nextHop, keyList);
 
