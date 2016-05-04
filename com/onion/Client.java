@@ -212,10 +212,10 @@ public class Client {
 		Random rnd = new Random();
 		ArrayList<Integer> al = new ArrayList<Integer>();
 		int switchesAvailable = config.getSwitchesCount();	
-		int numberOfHops = (int) (config.getSwitchesCount() / 0.75);
+		int numberOfHops = (int) (config.getSwitchesCount() * 0.75);
 		int addedHops = 0;
 		int nextHop = 0;
-		Common.log("[Client]: Chose circuit:");
+		Common.log("[Client]: Chosen circuit:");
 		for(int i = 0; i < numberOfHops; i++) {
 			do {
 				nextHop = rnd.nextInt(switchesAvailable);

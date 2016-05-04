@@ -65,7 +65,7 @@ public class CircuitSwitch {
 
 			while(true) {
 			    try {
-                    Common.log("[CircuitSwitch]: Wating for connection...");
+                    Common.log("[CircuitSwitch]: Waiting for connection...");
                     requests.add(welcomeSocket.accept());    
                     Common.log("[CircuitSwitch]: Accepted connection...");
 			    } catch (Exception e) {
@@ -89,8 +89,8 @@ public class CircuitSwitch {
 		Socket sck = null;
 		Socket nextHop = null;
 		Socket nextSendSocket = null;
-		KeyPair keys;
-		Key mySymKey;
+		KeyPair keys = null;
+		Key mySymKey = null;
 		ArrayList<Key> hopKeys = null;
 
 		public SwitchWorker(LinkedBlockingQueue<Socket> requests) {
