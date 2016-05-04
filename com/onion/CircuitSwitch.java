@@ -128,6 +128,8 @@ public class CircuitSwitch {
 						case KEY_REQUEST:
 							handleKeyRequestMessage(msg);
 							break;
+						case KEY_REPLY:
+							handleKeyReplyMessage(msg);
 						default:
 							System.out.println("[CircuitSwitch]: Illegal packet type");
 							System.exit(1);    
@@ -233,6 +235,18 @@ public class CircuitSwitch {
 				key = null;
 				hopKeys = null;
 				nextSendSocket = null;
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+		}
+	
+		private void handleKeyReplyMessage(OnionMessage msg) {
+			// serialize and push through
+			Common.log("[CircuitSwitch]: Key Reply Message.");
+			byte[] data = msg.pack();
+			try {
+				sck.getOutputStream().write(data, 0, data.length);
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.exit(1);

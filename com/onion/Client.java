@@ -45,7 +45,7 @@ public class Client {
 						int targetHost = Integer.parseInt(command[1]);
 
 						if(targetHost < 0) {
-							System.out.println("Illegal targer host number.");
+							System.out.println("Illegal target host number.");
 							continue;
 						} else if (!connMap.containsKey(targetHost)) {
 							System.out.println("Connection with this host not established");
@@ -72,13 +72,12 @@ public class Client {
 
 						if(targetHost < 0 || targetHost >= config.getEndpointsCount()) {
 							System.out.println("Illegal target host number");
-							throw new Exception();
+							continue;
 						}
 
 						if(connMap.containsKey(targetHost)) {
 							System.out.println("Connection with this host already established");
-							System.out.println("Usage: connect <ID-of-host>");
-							throw new Exception();
+							continue;
 						}		
 
 						establishConnection(targetHost);
@@ -89,7 +88,23 @@ public class Client {
 						continue;
 					}
 				} else if (command[0].equals("disconnect")) {
-					// TODO disconnect
+					try {
+						int targetHost = Integer.parseInt(command[1]);
+
+						if(!connMap.containsKey(targetHost)) {
+							System.out.println("Uknown host: " + targetHost);
+							throw new Exception();
+						}
+
+						Connection c = connMap.get(targetHost);
+						// notice that this removes the connection from the hashtable too.
+						c.killConnection();
+						continue;
+					} catch (Exception e) {
+						System.out.println("Illegal target host number");
+						System.out.println("Usage: disconnect <ID-of-host>");
+						continue;
+					}
 				}
 
 				System.out.println("Wrong command given. Available commands:");
