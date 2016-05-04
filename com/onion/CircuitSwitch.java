@@ -200,12 +200,11 @@ public class CircuitSwitch {
 			CircuitHopKeyReply resp = new CircuitHopKeyReply(keys.getPublic());
 			byte[] respBytes = CipherUtils.serialize(resp);
 
-			OnionMessage response = new OnionMessage(OnionMessage.MsgType.KEY_REPLY, respBytes);
-			byte[] responseEncr = CipherUtils.onionEncryptMessage(response, hopKeys);
+			byte[] response = new OnionMessage(OnionMessage.MsgType.KEY_REPLY, respBytes).pack();
 			
 			// send.
 			try {
-				sck.getOutputStream().write(responseEncr, 0, responseEncr.length);
+				sck.getOutputStream().write(response, 0, response.length);
 				Common.log("[CircuitSwitch]: Response Sent.");
 			} catch (Exception e) {
 				e.printStackTrace();
