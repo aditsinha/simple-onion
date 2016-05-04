@@ -67,6 +67,9 @@ public class OnionMessage implements Serializable {
             }
 
             return (OnionMessage) CipherUtils.deserialize(object);    
+        } catch(SocketException e) {
+            // killing the connection may throw this.
+            return null;
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);

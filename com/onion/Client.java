@@ -290,7 +290,7 @@ public class Client {
 			while(!Thread.currentThread().isInterrupted()) {
 				try {
 					incoming = OnionMessage.unpack(sck);
-					if(incoming.getType() == OnionMessage.MsgType.DATA) {
+					if(incoming != null && incoming.getType() == OnionMessage.MsgType.DATA) {
 						message = new String(incoming.getData(), "US-ASCII");
 						// TODO Have a lock on stdin so that we don't get garbage.
 						System.out.println(name +"(" + connKey + ")" + " says: " + message);
@@ -322,7 +322,6 @@ public class Client {
 				this.os = sck.getOutputStream();
 				this.msgToSend = msgToSend;
 				this.symKeys = new ArrayList<>(symKeys);
-                                //Collections.reverse(this.symKeys);
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.exit(1);
