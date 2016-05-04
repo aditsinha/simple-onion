@@ -237,6 +237,7 @@ public class Client {
 			this.sck = sck;
 			this.symKeys = symKeys;
 			this.name = name;
+			this.connKey = connKey;
 
 			wr = new Thread(new Writer(sck, msgsToSend, symKeys));
 			r = new Thread(new Reader(sck, name, this, connKey));
@@ -259,6 +260,7 @@ public class Client {
 
 		// shutsdown the connection.
 		public void removeConnection() {
+			Common.log("[Client]: Connection closed by " + name + "(" + connKey + ")");
 			wr.interrupt();
 			r.interrupt();
 			try {
@@ -273,6 +275,7 @@ public class Client {
 		// sends the poison message
 		public void disconnect() {
 			try {
+				Common.log("[Client]: Disconnecting from " + name + "(" + connKey + ")");
 				// note -- connection is closed by the first hop, not us.
 				byte[] poisonMsg = new OnionMessage(OnionMessage.MsgType.POISON, new byte[0]).pack();
 				sck.getOutputStream().write(poisonMsg, 0, poisonMsg.length);
