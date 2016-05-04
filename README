@@ -1,6 +1,6 @@
 simple-onion
 
-Stasiek Świdwiński
+Stan Swidwinski
 Aditya Sinha
 
 Building the program:
@@ -9,9 +9,9 @@ Run 'make' from the root directory of the project.
 
 Config file structure:
 
-The config file contains 2 groups of addresses.  Each group consists
+The config file contains 2 groups of addresses.  Each group
 contains one or more addresses with one address per line.  The groups
-are separated by a blonk line.  The first group contains the addresses
+are separated by a blank line.  The first group contains the addresses
 of all of the switches in the network.  The second group contains the
 addresses of all of the clients.  There must be at least 2 switches and
 at least 2 clients.  All of the nodes running the protocol must have
@@ -27,7 +27,7 @@ java -classpath bcprov-jdk15on.jar:. com/onion/App CLIENT <config file name>
 
 and the following command on each switch node:
 
-java -classpath bcprov-jdk15on.jar:. com/onion/App CLIENT <config file name>
+java -classpath bcprov-jdk15on.jar:. com/onion/App SWITCH <config file name>
 
 Using the program:
 
