@@ -23,11 +23,9 @@ import java.util.Collections;
 public class CircuitSwitch {
 	SwitchThreadPool serviceThreads;
 	Config conf;
-	KeyPair keys;
 
 	CircuitSwitch(String configName){
 		Common.log("[CircuitSwitch]: Initialize.");
-		keys = CipherUtils.generateRsaKeyPair();	
 		conf = new Config(configName);
 		try { 
 			serviceThreads = new SwitchThreadPool(new ServerSocket(Common.PORT));
@@ -91,7 +89,8 @@ public class CircuitSwitch {
 		Socket sck = null;
 		Socket nextHop = null;
 		Socket nextSendSocket = null;
-		Key key;
+		KeyPair keys;
+		Key mySymKey;
 		ArrayList<Key> hopKeys = null;
 
 		public SwitchWorker(LinkedBlockingQueue<Socket> requests) {
@@ -104,6 +103,7 @@ public class CircuitSwitch {
 					// accept a new connection only if currently not serving one.
                     if(sck == null) {
                         sck = requests.take();
+                        keys = CipherUtils.generateRsaKeyPair();	
                         Common.log("[CircuitSwitch]: Dequeued connection");
                     }
 
@@ -185,7 +185,7 @@ public class CircuitSwitch {
 
 				Common.log("[CircuitSwitch]: Establishing connection with: " + nextNodeAddr.getHostName());
 				nextHop.connect(new InetSocketAddress(nextNodeAddr, Common.PORT));
-				key = symKey;
+				mySymKey = symKey;
 
 				// create an answer message.
 				CircuitHopReplyMessage resp = new CircuitHopReplyMessage();
@@ -234,7 +234,7 @@ public class CircuitSwitch {
 		// decrypts a layer and passes data on in the correct direction
 		private void handleDataMessage(OnionMessage msg) {
 			Common.log("[CircuitSwitch]: Data Message.");
-			byte[] decryptedData = CipherUtils.applyCipher(msg.getData(), CipherUtils.SYM_ALGORITHM, Cipher.DECRYPT_MODE, key);	
+			byte[] decryptedData = CipherUtils.applyCipher(msg.getData(), CipherUtils.SYM_ALGORITHM, Cipher.DECRYPT_MODE, mySymKey);	
 			try {
 				nextSendSocket.getOutputStream().write(decryptedData, 0 , decryptedData.length);	
 			} catch (Exception e) {
@@ -255,7 +255,8 @@ public class CircuitSwitch {
 				sck.close();
 				nextHop = null;
 				sck = null;
-				key = null;
+				mySymKey = null;
+				keys = null;
 				hopKeys = null;
 				nextSendSocket = null;
 			} catch (Exception e) {
