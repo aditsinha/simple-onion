@@ -4,6 +4,13 @@ import java.security.*;
 import java.io.*;
 import java.util.*;
 
+/*
+    CircuitHopRequestMessage.java
+
+    Represents the circuit hope request message that is wrapped into
+    an onion message to be sent. Described further in the write up.
+*/
+
 public class CircuitHopRequestMessage implements Serializable {
 
     public CircuitHopRequestMessage(byte[] keyData, byte[] payloadData) {

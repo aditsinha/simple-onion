@@ -8,6 +8,17 @@ import java.security.*;
 import javax.crypto.*;
 import java.util.Collections;
 
+/*
+	CircuitSwitch.java
+
+	Represents a single switch available. The switches are multithreaded
+	and stateful -- a single switch can server as many connections as many
+	threads it possesses and contains the state of a connection until
+	it receives a poison message. For more about the protocol please see the 
+	write-up or readme. A single switch (a single thread) services traffic 
+	in both directions.
+*/
+
 
 public class CircuitSwitch {
 	SwitchThreadPool serviceThreads;
@@ -143,11 +154,12 @@ public class CircuitSwitch {
 			}
 		}
 
+		// opens a socket to the next hop and responds with a success message.
 		private void handleHopRequestMessage(OnionMessage msg) {
 			Common.log("[CircuitSwitch]: Hop Request Message Received");
 			CircuitHopRequestMessage chrm = (CircuitHopRequestMessage) CipherUtils.deserialize(msg.getData());
 			if(chrm == null) {
-				Common.log("[CircuitSwitch]: handleHopRequestMessage: cannot deserialize.");
+				System.out.println("[CircuitSwitch]: handleHopRequestMessage: cannot deserialize.");
 				System.exit(1);
 			}
 
@@ -189,10 +201,16 @@ public class CircuitSwitch {
 			}
 		}		
 
+		// returns the public key of the node to through the circuit
 		private void handleKeyRequestMessage(OnionMessage msg) {
 			Common.log("[CircuitSwitch]: Key Request Message.");
 			CircuitHopKeyRequest req = (CircuitHopKeyRequest) CipherUtils.deserialize(msg.getData());
 			
+			if(req == null) {
+				System.out.println("[CircuitSwitch]: Cannot deserialize a key request message.");
+				System.exit(1);
+			}
+
 			// reverse the key list.
 			hopKeys = (ArrayList<Key>)req.getKeys();
 			Collections.reverse(hopKeys);
@@ -213,6 +231,7 @@ public class CircuitSwitch {
 			}
 		}
 
+		// decrypts a layer and passes data on in the correct direction
 		private void handleDataMessage(OnionMessage msg) {
 			Common.log("[CircuitSwitch]: Data Message.");
 			byte[] decryptedData = CipherUtils.applyCipher(msg.getData(), CipherUtils.SYM_ALGORITHM, Cipher.DECRYPT_MODE, key);	
@@ -224,6 +243,7 @@ public class CircuitSwitch {
 			}
 		}
 
+		// passes the poison message on and forgets the current circuit.
 		private void handlePoisonMessage(OnionMessage msg) {
 			Common.log("[CircuitSwitch]: Poison Message.");
 			byte[] msgBytes = msg.pack();
@@ -244,6 +264,7 @@ public class CircuitSwitch {
 			}
 		}
 	
+		// passes a key reply on.
 		private void handleKeyReplyMessage(OnionMessage msg) {
 			// serialize and push through
 			Common.log("[CircuitSwitch]: Key Reply Message.");

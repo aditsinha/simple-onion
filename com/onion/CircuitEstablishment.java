@@ -10,6 +10,16 @@ import javax.crypto.spec.*;
 import org.bouncycastle.util.io.pem.*;
 import org.bouncycastle.crypto.*;
 
+/*
+    CircuitEstablishment.java
+
+    Contains most of the logic for generation of the correct messages necessary
+    to establish a circuit for an anonymous connection. Used by the client to
+    generate the proper messages in the correct order. In effect allows the client
+    to obtain all necessary keys and deliver all necessary symmetric keys (generates 
+    them).
+*/
+
 public class CircuitEstablishment {
 
     private List<Integer> hops;

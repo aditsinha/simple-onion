@@ -4,6 +4,14 @@ import java.io.*;
 import java.nio.*;
 import java.net.*;
 
+/*
+    OnionMessage.java
+
+    Represents a wrapper for most any message sent within the protocol.
+    Is used to demultiplex among the possible handling functions within
+    the circuit switches and endpoints. Notice that data is usually encrypted.
+*/
+
 public class OnionMessage implements Serializable {
     public OnionMessage(MsgType type, byte[] data) {
     this.data = data;
@@ -31,8 +39,7 @@ public class OnionMessage implements Serializable {
     return data;
     } 
 
-    // Format: length of msg connectionID MsgType DATA
-    // MsgType is serialized as the ordinal value
+    // pack the message for sending. Serializes.
     public byte[] pack() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
@@ -48,6 +55,7 @@ public class OnionMessage implements Serializable {
         return null;
     }
 
+    // unpack a received message. Assumes that it was packed using the pack() method.
     public static OnionMessage unpack(Socket sck) {
         try {
             Common.log("[OnionMessage]: unpack");

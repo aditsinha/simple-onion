@@ -3,7 +3,8 @@ package com.onion;
 /*
 	Common.java
 
-	Contains common variables and logging functions.
+	Contains common variables and logging functions. To turn on
+	debugging information, set TEST to true;
 
 */
 
