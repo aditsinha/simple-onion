@@ -252,7 +252,14 @@ public class CircuitSwitch {
 				nextSendSocket.getOutputStream().write(msgBytes, 0, msgBytes.length);
 			
 				// reset the state.
-				nextSendSocket.close();
+				if(nextSendSocket == sck){
+					Common.log("[CircuitSwitch]: Poison came from initiator.");
+					nextHop.close();
+				} else {
+					Common.log("[CircuitSwitch]: Poison came from source.");
+					sck.close();
+				}
+
 				nextHop = null;
 				sck = null;
 				mySymKey = null;
