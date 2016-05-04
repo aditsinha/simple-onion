@@ -11,10 +11,15 @@ import javax.crypto.*;
 import org.bouncycastle.util.io.pem.*;
 import org.bouncycastle.crypto.*;
 
+/*
+	CipherUtils.java
+
+	Contains all static helper functions used throughout the code base.
+*/
 
 public class CipherUtils {
 
-    public static String ASYM_ALGORITHM = "RSA/ECB/PKCSPadding";
+    public static String ASYM_ALGORITHM = "RSA/ECB/PKCS1Padding";
     public static String SYM_ALGORITHM = "AES/ECB/PKCS7Padding";
 
     private static Random rand = new Random();
@@ -32,24 +37,38 @@ public class CipherUtils {
     }
 
     public static byte[] applyCipher(byte[] data, Cipher cipher) {
-	try {
-	    return cipher.doFinal(data);
-	} catch (GeneralSecurityException e) {
-	    e.printStackTrace();
-	    return null;
+		try {
+		    return cipher.doFinal(data);
+		} catch (GeneralSecurityException e) {
+		    e.printStackTrace();
+		    return null;
 	}
     }
 
     public static byte[] applyCipher(byte[] data, String cipherAlgorithm, int mode, Key key) {
-	try {
-	    Cipher cipher = Cipher.getInstance(cipherAlgorithm, "BC");
-	    cipher.init(mode, key);
-	    return cipher.doFinal(data);
-	} catch (GeneralSecurityException e) {
-	    e.printStackTrace();
-	    return null;
-	}
+		try {
+		    Cipher cipher = Cipher.getInstance(cipherAlgorithm, "BC");
+		    cipher.init(mode, key);
+		    return cipher.doFinal(data);
+		} catch (GeneralSecurityException e) {
+		    e.printStackTrace();
+            System.exit(1);
+	        }
+        return null;
     }
+
+    public static Cipher getCipher(String cipherAlgorithm, int mode, Key key) {
+        try {
+		    Cipher cipher = Cipher.getInstance(cipherAlgorithm, "BC");
+		    cipher.init(mode, key);
+            return cipher;
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return null;
+    }
+
 
     public static Object deserialize(byte[] data) {
 	try {
@@ -57,42 +76,42 @@ public class CipherUtils {
 	    return ois.readObject();
 	} catch (IOException | ClassNotFoundException e) {
 	    // this is bad
-	    e.printStackTrace();
+	    // be silent about it.
+	    //e.printStackTrace();
 	    return null;
 	}
     }
     
     public static byte[] getRandomBytes(int count) {
-	byte[] b = new byte[count];
-	rand.nextBytes(b);
-	return b;
+		byte[] b = new byte[count];
+		rand.nextBytes(b);
+		return b;
     }
 
     // assume that the first key's hop is in hops.get(0)
-    public static OnionMessage onionEncryptMessage(OnionMessage msg, List<Key> hops) {
+    public static byte[] onionEncryptMessage(OnionMessage msg, List<Key> hops) {
 	boolean isPoison = (msg.getType() == OnionMessage.MsgType.POISON);
 
 	for (int i = hops.size() - 1; i >= 0; i--) {
 	    msg = new OnionMessage(isPoison ? OnionMessage.MsgType.POISON : OnionMessage.MsgType.DATA,
 				   applyCipher(msg.pack(), SYM_ALGORITHM,
-					       Cipher.ENCRYPT_MODE, hops.get(i)));
+			       Cipher.ENCRYPT_MODE, hops.get(i)));
 	}
 
-	return msg;
+	return msg.pack();
     }
 	
     public static byte[] serialize(Serializable obj) {
-	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	ObjectOutputStream oos = null;
-	try {
-	    oos = new ObjectOutputStream(baos);
-	    oos.writeObject(obj);
-	    return baos.toByteArray();
-	            
-	} catch (IOException e) {
-	    return null;
-	            
-	}
-	    
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectOutputStream oos = null;
+		try {
+		    oos = new ObjectOutputStream(baos);
+		    oos.writeObject(obj);
+		    return baos.toByteArray();
+		            
+		} catch (IOException e) {
+			e.printStackTrace();
+		    return null;       
+		}	    
     }
 }

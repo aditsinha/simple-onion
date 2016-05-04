@@ -1,0 +1,92 @@
+simple-onion
+
+Stasiek Świdwiński
+Aditya Sinha
+
+
+For our project, we implemented a simple onion routing scheme.  In
+order to run the code, do the following steps:
+
+////
+TODO
+////
+
+Background
+----------
+----------
+
+Onion routing is used to guarantee anonymity in networks.  In onion
+routing, in order to send a message to a destination, a client
+encapsulates the message with multiple layers of encryption.  The
+message is transmitted through a series of switches, which are other
+nodes in the network.  At each switch, the node decrypts one layer of
+the onion and forwards the message to the next node in the path.  The
+final switch in the path will decrypt the last layer of encryption,
+and the message will be forwarded to the destination.  Onion routiong
+does not provide end-to-end encryption, since it is assumed that that
+can be achieved through other means.
+
+In onion routing, nodes only know the identities of the node to which
+they are sending the message and the node from which they are
+receiving the message.  Therefore, if there is at least one switch,
+then the destination node does not learn the identity of the source
+node, and if there are at least 2 switches, then no node knows both
+the identity of the source and the destination (except of course the
+source, which chose to contact the destination).
+
+
+Protocol Description
+--------------------
+--------------------
+
+The client chooses a random path of switch nodes without duplicates
+from a prespecified list which will act as hops between itself and the
+destination.  Then, it must do a handshake with each of the nodes in
+order to establish the circuit.  The handshakes themselves are
+performed using onion routing i.e. the handshake with the second
+switch in the path is done via the connection already set up with the
+first switch.
+
+The handshake begins when the client sends a Key Request Message to a
+switch, which does not contain any data.  The server responds with a
+Key Reply Message containing a fresh public key.  This message, too,
+is unencrypted.
+
+The public key provided by the switch must be newly created for every
+Key Request Message, otherwise, another switches will might be able to
+guess the identity of the switch even when the two are separated by an
+intermediate hop.  This can be done if the two switches were
+neightboring in some other circuit and one switch remembers the public
+key associated with another.
+
+The client then sends a Hop Request Message to the server.  The
+message contains a secret key chosen by the client that has been
+wrapped with the server's public key.  It also contains the address of
+the next node in the path so that the switch can open a connection to
+it and the list of keys that have been negotiated so far so the switch
+is able to use the existing circuit when communicating with the source
+node.  This data is encrypted using the secret key contained in the
+message.  The switch replies with a Circuit Hop Response Message to
+acknowledge that the connection has been successfully created.  The
+handshake with this switch has been completed, and we can proceed with
+the handshake with the next switch in the path.
+
+Once the entire circuit has been setup, the client sends an onion
+encrypted message containing all of the secret keys negotiated in the
+path in reverse order, so that the destination is able to use the same
+circuit to communicate with the client.
+
+The client and destination are able to send messages each other using
+the circuit.  When one of the ends wishes to close the circuit, it
+sends a Poison message to the other end.  When a node receives a
+poison message, it closes the connection from which it received the
+message, and forwards it to the next node in the circuit.  Therefore,
+all of the connections in the circuit are closed.
+
+
+External Resources Used
+-----------------------
+-----------------------
+
+We use Bouncy Castle's implementations of AES and RSA in order to do
+secret key and public key encryption respectively.

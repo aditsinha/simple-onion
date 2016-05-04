@@ -4,26 +4,46 @@ import java.security.*;
 import java.io.*;
 import java.util.*;
 
+/*
+    CircuitHopRequestMessage.java
+
+    Represents the circuit hope request message that is wrapped into
+    an onion message to be sent. Described further in the write up.
+*/
+
 public class CircuitHopRequestMessage implements Serializable {
-    public CircuitHopRequestMessage(int nextNode, Key secretKey, List<Key> wrapKeys) {
-	this.nextNode = nextNode;
-	this.secretKey = secretKey;
-	this.wrapKeys = wrapKeys;
+
+    public CircuitHopRequestMessage(byte[] keyData, byte[] payloadData) {
+	this.keyData = keyData;
+        this.payloadData = payloadData;
     }
 
-    private int nextNode;
-    private Key secretKey;
-    private List<Key> wrapKeys;
-    
-    public int getNextNode() {
-	return nextNode;
+    private byte[] keyData;
+    private byte[] payloadData;
+
+    public byte[] getKeyData() {
+        return keyData;
     }
 
-    public Key getSecretKey() {
-	return secretKey;
+    public byte[] getPayloadData() {
+        return payloadData;
     }
 
-    public List<Key> getWrapKeys() {
-	return wrapKeys;
+    public static class Payload implements Serializable {
+        public Payload(int nextNode, List<Key> wrapKeys) {
+            this.nextNode = nextNode;
+            this.wrapKeys = wrapKeys;
+        }
+
+        private int nextNode;
+        private List<Key> wrapKeys;
+
+        public int getNextNode() {
+            return nextNode;
+        }
+
+        public List<Key> getWrapKeys() {
+            return wrapKeys;
+        }
     }
 }
