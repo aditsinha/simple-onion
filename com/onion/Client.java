@@ -12,6 +12,33 @@ import java.util.Collections;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
+/*
+	Client.java
+
+	Implements the endpoint-client logic for our simplified Tor. This client
+	is basically an anonymous chat client that allows two-way communication. 
+	Notice that within any connection one of the endpoints does not know
+	the endpoint with which it is communicating.
+	
+	Every connection is represented by the Connection class 
+	and is  associated with two threads:
+		A) A reader thread, which reads the incoming data from the other
+			endpoint and prints it to the user.
+		B) A writer thread, which takes input from the command line and
+			sends it to the designated endpoint.
+		For details considering addressing clients, please see the 
+		startCommandLoop function.
+
+	Moreover, every client has an additional Acceptor thread that accepts
+	incoming anonymous connections and associates a Connection object with 
+	them. Such connections are given a unique identification number
+	that must be used when communicating with such anonymous endpoints.
+
+	The main thread of the client serves the commands given by the user. 
+	Please see startCommandLoop for details.
+
+*/
+
 public class Client {
 	// maps endpoint to the information necessary
 	// only the main thread accesses it.
@@ -35,6 +62,22 @@ public class Client {
 		}
 	}
 
+	/*
+		Puts the main thread into an infinite loop that takes commands from the 
+		user and executes the proper functions. Command available are:
+			a) connect <ID-of-host>\n
+			b) send <ID-of-host> <arbitrary message>\n
+			c) disconnect <ID-of-host>\n
+		
+		ID-of-host is the index of the host within the host list in config. If a connection
+		if established by an annonymous source, it is assigned an ID that is visible when 
+		the connection is established.
+
+		Notice that one has to establish a connection with remote host (or an anonymous
+		host must establish a connection with the client) in order to send messages.
+
+		Disconnect frees resources.
+	*/
 	private void startCommandLoop() {
 		String[] command;
 		BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
@@ -108,7 +151,7 @@ public class Client {
 				}
 
 				System.out.println("Wrong command given. Available commands:");
-				System.out.println("\t -- \t send <Host Number>");
+				System.out.println("\t -- \t send <Host Number> <Message>");
 				System.out.println("\t -- \t connect <Host Number>");
 				System.out.println("\t -- \t disconnect <Host Number>");
 				
@@ -119,6 +162,10 @@ public class Client {
 		}
 	}
 
+	/*
+		Called whenever a new connection is required. Establishes the connection
+		with endpoint indexed as destination.
+	*/
 	private void establishConnection(int destination) {
 		Common.log("[Client]: Establishing circuit to " + config.getEndpoint(destination).getHostName());
 		ArrayList<Integer> hops = getCircuitHops();
@@ -138,8 +185,8 @@ public class Client {
 				// get the new message
 				msg = ce.processMessage(response);
 			}
-                        // send the keys to the destination node
-                        os.write(msg, 0, msg.length);
+            // send the keys to the destination node
+            os.write(msg, 0, msg.length);
 
 			Common.log("[Client]: Circuit established.");
 			// the circuit has been established
@@ -154,15 +201,18 @@ public class Client {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);
-		}
-		
+		}	
 	} 
 
+	/*
+		Return a list of indeces of switches within this circuit.
+		Uses 75% of available switches.
+	*/
 	private ArrayList<Integer> getCircuitHops() {
 		Random rnd = new Random();
 		ArrayList<Integer> al = new ArrayList<Integer>();
 		int switchesAvailable = config.getSwitchesCount();	
-		int numberOfHops = config.getSwitchesCount();
+		int numberOfHops = (int) (config.getSwitchesCount() / 0.75);
 		int addedHops = 0;
 		int nextHop = 0;
 		Common.log("[Client]: Chose circuit:");
@@ -199,20 +249,19 @@ public class Client {
 					if(omsg.getType() == OnionMessage.MsgType.KEY_REQUEST) {
 						CircuitHopKeyRequest chkr = (CircuitHopKeyRequest) CipherUtils.deserialize(omsg.getData());
 						// this will definitely be unique.
-                                                int hashKey;
-                                                do {
-                                                    hashKey = config.getEndpointsCount() + rand.nextInt(1000 - config.getEndpointsCount());
-                                                } while (connMap.contains(hashKey));
+                        int hashKey;
+                        do {
+                            hashKey = config.getEndpointsCount() + rand.nextInt(1000 - config.getEndpointsCount());
+                        } while (connMap.contains(hashKey));
 
-                                                List<Key> secretKeys = chkr.getKeys();
-                                                Collections.reverse(secretKeys);
+                        List<Key> secretKeys = chkr.getKeys();
+                        Collections.reverse(secretKeys);
 
 						Connection c = new Connection(hashKey, newConn, secretKeys);
 						connMap.put(hashKey, c);
-						Common.log("[Client]: Connection accepted with Anonymous" + hashKey);
-						// TODO write about this somehow	
+						System.out.println("[Client]: Connection accepted with Anonymous" + hashKey);
 					} else {
-						// TODO handle error
+						Common.log("[Client]: Acceptor received message of type: " + omsg.getType().name());
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -222,6 +271,7 @@ public class Client {
 		}
 	}
 
+	// represents a connection.
 	private class Connection {
 		Socket sck;
 		Thread wr;
