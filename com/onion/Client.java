@@ -303,10 +303,15 @@ public class Client {
 		public void run() { 
 			OnionMessage incoming;
 			String message;
-			while(!Thread.currentThread().isInterrupted()) {
+			while(true) {
 				try {
 					incoming = OnionMessage.unpack(sck);
-					if(incoming != null && incoming.getType() == OnionMessage.MsgType.DATA) {
+
+					// socket has been closed.
+					if(incoming == null || sck.isClosed())
+						break;
+
+					if(incoming.getType() == OnionMessage.MsgType.DATA) {
 						message = new String(incoming.getData(), "US-ASCII");
 						// TODO Have a lock on stdin so that we don't get garbage.
 						System.out.println(name +"(" + connKey + ")" + " says: " + message);
@@ -314,11 +319,12 @@ public class Client {
 						Common.log("[Client]: Received Poison Message. Disconnect.");
 						c.removeConnection();
 					} else {
-						// error
-						// TODO handle
+						Common.log("[Client]: Unknown message type received.");
+						continue;
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
+					break;
 				}
 			}
 		}

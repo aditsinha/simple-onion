@@ -71,7 +71,8 @@ public class CipherUtils {
 	    return ois.readObject();
 	} catch (IOException | ClassNotFoundException e) {
 	    // this is bad
-	    e.printStackTrace();
+	    // be silent about it.
+	    //e.printStackTrace();
 	    return null;
 	}
     }
