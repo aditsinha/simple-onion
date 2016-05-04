@@ -258,9 +258,11 @@ public class Client {
 
 		public void killConnection() {
 			try {
+				// note -- connection is closed by the first hop, not us.
+				byte[] poisonMsg = new OnionMessage(OnionMessage.MsgType.POISON, new byte[0]).pack();
+				sck.write(poisonMsg, 0, poisonMsg.length);
 				wr.interrupt();
 				r.interrupt();
-				sck.close();
 				connMap.remove(connKey);
 			} catch (Exception e) {
 				// TODO handle this
