@@ -227,9 +227,10 @@ public class CircuitSwitch {
 		private void handlePoisonMessage(OnionMessage msg) {
 			Common.log("[CircuitSwitch]: Poison Message.");
 			byte[] msgBytes = msg.pack();
-			// forward the message
-			nextHop.getOutputStream().write(msgBytes, 0, msgBytes.length);
 			try {
+				// forward the message
+				nextHop.getOutputStream().write(msgBytes, 0, msgBytes.length);
+			
 				// reset the state.
 				sck.close();
 				nextHop = null;
