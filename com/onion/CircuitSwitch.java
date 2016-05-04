@@ -253,10 +253,10 @@ public class CircuitSwitch {
 			
 				// reset the state.
 				if(nextSendSocket == sck){
-					Common.log("[CircuitSwitch]: Poison came from initiator.");
+					Common.log("[CircuitSwitch]: Poison came from destination.");
 					nextHop.close();
 				} else {
-					Common.log("[CircuitSwitch]: Poison came from source.");
+					Common.log("[CircuitSwitch]: Poison came from initiator.");
 					sck.close();
 				}
 
