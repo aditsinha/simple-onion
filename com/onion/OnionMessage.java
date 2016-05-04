@@ -71,7 +71,7 @@ public class OnionMessage implements Serializable {
             // killing the connection may throw this.
             return null;
         } catch (Exception e) {
-            if(sck == null) {
+            if(sck.isClosed()) {
                 // socket has been closed.
                 // quit silently.
                 return null;
