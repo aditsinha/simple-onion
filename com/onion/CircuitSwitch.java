@@ -249,10 +249,10 @@ public class CircuitSwitch {
 			byte[] msgBytes = msg.pack();
 			try {
 				// forward the message
-				nextHop.getOutputStream().write(msgBytes, 0, msgBytes.length);
+				nextSendSocket.getOutputStream().write(msgBytes, 0, msgBytes.length);
 			
 				// reset the state.
-				sck.close();
+				nextSendSocket.close();
 				nextHop = null;
 				sck = null;
 				mySymKey = null;
